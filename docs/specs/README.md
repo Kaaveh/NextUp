@@ -4,7 +4,7 @@ NextUp is built spec-first. A spec keeps the decisions: what the app does, where
 
 | Module | Code | Status | Spec |
 |---|---|---|---|
-| `core-rules` | `Package.swift`, `Sources/NextUpCore/`, `Tests/NextUpCoreTests/` | Specified, not built | [SPEC-core-rules.md](SPEC-core-rules.md) |
+| `core-rules` | `Package.swift`, `Sources/NextUpCore/`, `Tests/NextUpCoreTests/` | Built | [SPEC-core-rules.md](SPEC-core-rules.md) |
 | `menubar-app` | `Sources/NextUp/`, `Support/Info.plist`, `scripts/` | Specified, not built | [SPEC-menubar-app.md](SPEC-menubar-app.md) |
 | `meeting-alerts` | `Sources/NextUpCore/AlertPlan.swift`, `Sources/NextUp/MeetingAlerts.swift` | Specified, not built | [SPEC-meeting-alerts.md](SPEC-meeting-alerts.md) |
 
