@@ -1,0 +1,189 @@
+import AppKit
+import NextUpCore
+import ServiceManagement
+
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+    private let selfCheck: Bool
+    private var statusItem: NSStatusItem!
+    /// The one store for the app's life; `nil` in the self-check, which calls no EventKit.
+    private var source: CalendarSource?
+    private var timer: Timer?
+    /// The events of the last refresh; `nil` without calendar access.
+    private var events: [Event]? = []
+
+    // The only place the two modes differ (menubar-app R18, R32).
+    private var now: Date { selfCheck ? SelfCheck.now : Date() }
+    private var calendar: Calendar { selfCheck ? SelfCheck.calendar : .autoupdatingCurrent }
+    private var locale: Locale { selfCheck ? SelfCheck.locale : .autoupdatingCurrent }
+
+    init(selfCheck: Bool) {
+        self.selfCheck = selfCheck
+        super.init()
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        menu.delegate = self
+        statusItem.menu = menu
+        if selfCheck {
+            refresh()
+            SelfCheck.run(statusItem)
+            return
+        }
+        let source = CalendarSource()
+        self.source = source
+        refresh()
+        observe()
+        if CalendarSource.accessNotDetermined {
+            Task {
+                await source.requestAccess()
+                refresh()
+            }
+        }
+    }
+
+    func refresh() {
+        if let source {
+            events = source.events(in: Agenda.window(now: now, calendar: calendar))
+        } else {
+            events = SelfCheck.events
+        }
+        drawBar()
+    }
+
+    // MARK: Triggers
+
+    /// Every trigger calls the same `refresh()` (menubar-app R15–R17).
+    private func observe() {
+        let center = NotificationCenter.default
+        for name in [Notification.Name.EKEventStoreChanged, .NSCalendarDayChanged] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.refresh() }
+            }
+        }
+        for name in [Notification.Name.NSSystemClockDidChange, .NSSystemTimeZoneDidChange] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.realign() }
+            }
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.realign() }
+        }
+        scheduleTimer()
+    }
+
+    /// After a wake or a clock change: the timer moves to the next minute boundary, then a refresh.
+    private func realign() {
+        scheduleTimer()
+        refresh()
+    }
+
+    /// A repeating timer from the next minute boundary, at most 1 s late.
+    private func scheduleTimer() {
+        timer?.invalidate()
+        let nextMinute = Date(timeIntervalSinceReferenceDate: (Date.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60 + 60)
+        let timer = Timer(fire: nextMinute, interval: 60, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refresh() }
+        }
+        timer.tolerance = 1
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+    }
+
+    // MARK: Bar
+
+    private func drawBar() {
+        guard let button = statusItem.button else { return }
+        if let events, let bar = Agenda.bar(for: events, now: now) {
+            button.image = Self.colorBar(bar.color)
+            button.imagePosition = .imageLeading
+            button.title = bar.text
+        } else {
+            let (symbol, description) = events == nil
+                ? ("calendar.badge.exclamationmark", "NextUp: no calendar access")
+                : ("calendar", "NextUp: no upcoming events")
+            let image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
+            image?.isTemplate = true
+            button.image = image
+            button.title = ""
+        }
+    }
+
+    /// 3 × 14 pt, corner radius 1.5 pt, in the event's colour (menubar-app R21).
+    private static func colorBar(_ color: RGB) -> NSImage {
+        let image = NSImage(size: NSSize(width: 3, height: 14), flipped: false) { rect in
+            NSColor(srgbRed: color.red, green: color.green, blue: color.blue, alpha: 1).setFill()
+            NSBezierPath(roundedRect: rect, xRadius: 1.5, yRadius: 1.5).fill()
+            return true
+        }
+        image.isTemplate = false
+        return image
+    }
+
+    // MARK: Menu
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        if let events {
+            let sections = Agenda.sections(for: events, now: now, calendar: calendar, locale: locale)
+            if sections.isEmpty {
+                let empty = NSMenuItem(title: "No upcoming events", action: nil, keyEquivalent: "")
+                empty.isEnabled = false
+                menu.addItem(empty)
+            }
+            for section in sections {
+                menu.addItem(.sectionHeader(title: section.header))
+                for row in section.rows { menu.addItem(rowItem(row)) }
+            }
+        } else {
+            menu.addItem(.sectionHeader(title: "No calendar access"))
+            let settings = NSMenuItem(title: "Open Privacy Settings…", action: #selector(openPrivacySettings), keyEquivalent: "")
+            settings.target = self
+            menu.addItem(settings)
+        }
+        menu.addItem(.separator())
+        let login = NSMenuItem(title: "Launch at login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        login.target = self
+        // The self-check reads no ServiceManagement and draws it unchecked (menubar-app R33).
+        login.state = !selfCheck && SMAppService.mainApp.status == .enabled ? .on : .off
+        menu.addItem(login)
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Quit NextUp", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+    }
+
+    /// A row with no action of its own; a meeting gets a `Join Google Meet` submenu (menubar-app R24–R26).
+    private func rowItem(_ row: MenuRow) -> NSMenuItem {
+        let item = NSMenuItem(title: row.text, action: nil, keyEquivalent: "")
+        item.image = Self.colorBar(row.color)
+        if let url = row.meetURL {
+            let join = NSMenuItem(title: "Join Google Meet", action: #selector(join(_:)), keyEquivalent: "")
+            join.target = self
+            join.representedObject = url
+            item.submenu = NSMenu()
+            item.submenu?.addItem(join)
+        }
+        return item
+    }
+
+    /// The only place that calls `register()` (menubar-app R31).
+    @objc private func toggleLaunchAtLogin() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled { try service.unregister() } else { try service.register() }
+            if service.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+        } catch {
+            NSLog("NextUp: Launch at login failed: %@", String(describing: error))
+        }
+    }
+
+    @objc private func openPrivacySettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Calendars")!
+        NSWorkspace.shared.open(url)
+    }
+
+    @objc private func join(_ sender: NSMenuItem) {
+        if let url = sender.representedObject as? URL { NSWorkspace.shared.open(url) }
+    }
+}

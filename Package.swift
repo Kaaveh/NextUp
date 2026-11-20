@@ -6,6 +6,11 @@ let package = Package(
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "NextUpCore"),
+        .executableTarget(
+            name: "NextUp",
+            dependencies: ["NextUpCore"],
+            swiftSettings: [.defaultIsolation(MainActor.self)]
+        ),
         .testTarget(name: "NextUpCoreTests", dependencies: ["NextUpCore"]),
     ],
     swiftLanguageModes: [.v6]

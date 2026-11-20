@@ -1,6 +1,6 @@
 # Spec: menubar-app
 
-Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules` being merged. Status: specified, not built.
+Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open.
 
 ## Objective
 
@@ -46,7 +46,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   - `.notDetermined`, at launch only: call `requestFullAccessToEvents()` once, which shows macOS's prompt, and refresh when it returns;
   - anything else: the no-access state (R22, R28).
 - R11. Reading: `predicateForEvents(withStart:end:calendars:)` over `Agenda.window`, with `calendars: nil` for every calendar, then `events(matching:)`. It runs on the main thread, because a 3-day window is small.
-- R12. Each `EKEvent` becomes an `Event` and the EventKit object is dropped: `title` (`nil` becomes the empty string), `startDate`, `endDate`, the calendar's `color` converted to sRGB, and `MeetLink.find(in: notes)`.
+- R12. Each `EKEvent` becomes an `Event` and the EventKit object is dropped: `title` (`nil` becomes the empty string), `startDate`, `endDate`, the calendar's `color` converted to sRGB (grey when the calendar has none), and `MeetLink.find(in: notes)`.
 - R13. Skipped while mapping: `isAllDay`; `status == .canceled`; an event whose attendee with `isCurrentUser` has `participantStatus == .declined`.
 - R14. When access turns to full after the store was created (granted later in System Settings), call the store's `reset()` once before reading.
 
@@ -85,7 +85,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 
 **Self-check**
 - R32. `NextUp --self-check` runs the same status item and menu code as normal mode. Only four things differ: the events are the sample of R34, the clock is fixed at 2026-11-20 12:05:13, the calendar is Gregorian in GMT, and the locale is `en_US`.
-- R33. It calls no EventKit, no ServiceManagement and no `NSWorkspace.open`, so it can't raise a prompt or change anything on the Mac.
+- R33. It calls no EventKit, no ServiceManagement and no `NSWorkspace.open`, so it can't raise a prompt or change anything on the Mac. This outranks R32: `Launch at login` is drawn unchecked, and no refresh trigger (R16) is installed, since it exits after 5 s.
 - R34. Sample events (GMT):
 
   | Title | Start | End | Colour (red, green, blue) | Meet link |
@@ -219,12 +219,6 @@ Every script is executable, starts with `#!/bin/bash` and `set -euo pipefail`, a
 
 Done when: `scripts/check.sh` passes and the self-check's footprint is in the pull request's text; calendar reading, refresh, Launch at login and the install script are built; the manual QA list stays open.
 
-Automated (the Checks cover them):
-
-- [ ] `scripts/check.sh` exits with 0 and prints `check: OK`.
-- [ ] The self-check prints exactly the lines of R36.
-- [ ] `build/NextUp.app` passes `codesign --verify --strict` and `plutil -lint`, and its `LSUIElement` is `true`.
-
 Manual QA (the user, on the installed app; stays open after the build). Run `scripts/install.sh` yourself. To see a first-run prompt again: `tccutil reset Calendar ir.kaavehdev.nextup`, while NextUp is in `/Applications`.
 
 - [ ] `scripts/install.sh` signs with an Apple Development identity. Note whether `codesign` raised a keychain dialog, and whether Always Allow silenced it for the next install.
@@ -246,12 +240,3 @@ Manual QA (the user, on the installed app; stays open after the build). Run `scr
 | User | If `Launch at login` fails in manual QA for a locally signed build: accept it, or spec a LaunchAgent instead |
 | Later | Reading off the main thread, if the 3-day read ever makes the menu bar stutter |
 
-## Tasks (build order)
-
-- [ ] T1. Bundle and skeleton: the `NextUp` target with the bundle guard (R1–R5), `Support/Info.plist` (R6), `scripts/build-app.sh` (R7–R8). The app shows the `calendar` icon and a menu with `Quit NextUp`; `--self-check` prints what exists and exits with 0. Verify: `scripts/build-app.sh && timeout 30 build/NextUp.app/Contents/MacOS/NextUp --self-check`.
-- [ ] T2. Bar and menu from the sample: the colour bar, the bar's title, sections, rows, the Join submenu, the empty row, the last block with `Launch at login` not yet wired (R19–R27, R29); the self-check's sample, lines, 5 s and footprint (R32–R37); `scripts/check.sh` (R38). Verify: `scripts/check.sh`.
-- [ ] T3. Calendar: access, reading, mapping, the skip rules, `reset()`, and the no-access bar and menu (R9–R14, R22, R28). Verify: `scripts/check.sh`, with the self-check's output unchanged.
-- [ ] T4. Refresh: the one `refresh()`, its triggers and the minute timer (R15–R18). Verify: `scripts/check.sh`.
-- [ ] T5. Launch at login (R30–R31). Verify: `scripts/check.sh`.
-- [ ] T6. `scripts/install.sh` (R39). Verify: `bash -n scripts/install.sh`. Don't run it.
-- [ ] T7. Docs and spec workflow: add this module's commands and its Never list to `CLAUDE.md`; add installing, the permissions and measuring memory to `README.md`; delete this section and the automated Success Criteria; set the status line and the row in `docs/specs/README.md` to built with manual QA open; put the footprint in the pull request (R41–R42). Verify: `scripts/check.sh`.
