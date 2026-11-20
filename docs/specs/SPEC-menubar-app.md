@@ -142,7 +142,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 
 **Declined by a guest**
 - R43. Mapping (R12) sets `declinedByGuest` when `attendees` holds a participant with `isCurrentUser == false` and `participantStatus == .declined`. R13's skip of an event the user declined still comes first.
-- R44. A bar or row with `declinedByGuest` gets a striped colour bar instead of the solid one: the size and corner radius of R21, filled with 45° diagonal stripes, 2 pt of the event's colour then 2 pt transparent, not a template. The `⚠ ` comes with the text (core-rules R32).
+- R44. A bar or row with `declinedByGuest` gets a striped colour bar instead of the solid one: the size and corner radius of R21, filled with 45° diagonal stripes, 2 pt of the event's colour then 2 pt transparent (measured along the bar), not a template. The `⚠ ` comes with the text (core-rules R32).
 - R45. Nothing else changes for such an event: it gets its alert (meeting-alerts), its Join items (R26) and its place in the order.
 
 ## Interface

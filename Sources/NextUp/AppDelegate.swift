@@ -119,7 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func drawBar() {
         guard let button = statusItem.button else { return }
         if let events, let bar = Agenda.bar(for: events, now: now) {
-            button.image = Self.colorBar(bar.color)
+            button.image = Self.colorBar(bar.color, striped: bar.declinedByGuest)
             button.imagePosition = .imageLeading
             button.title = bar.text
         } else {
@@ -133,11 +133,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// 3 × 14 pt, corner radius 1.5 pt, in the event's colour (menubar-app R21).
-    private static func colorBar(_ color: RGB) -> NSImage {
+    /// 3 × 14 pt, corner radius 1.5 pt, in the event's colour (menubar-app R21); `striped`: 45° stripes,
+    /// 2 pt of colour then 2 pt clear, for an event a guest declined (R44).
+    private static func colorBar(_ color: RGB, striped: Bool = false) -> NSImage {
         let image = NSImage(size: NSSize(width: 3, height: 14), flipped: false) { rect in
             NSColor(srgbRed: color.red, green: color.green, blue: color.blue, alpha: 1).setFill()
-            NSBezierPath(roundedRect: rect, xRadius: 1.5, yRadius: 1.5).fill()
+            let shape = NSBezierPath(roundedRect: rect, xRadius: 1.5, yRadius: 1.5)
+            guard striped else {
+                shape.fill()
+                return true
+            }
+            shape.addClip()
+            // A 45° band 2 pt tall every 4 pt, from below the bottom edge to above the top one.
+            for y in stride(from: -rect.width, to: rect.height, by: 4) {
+                let band = NSBezierPath()
+                band.move(to: NSPoint(x: 0, y: y))
+                band.line(to: NSPoint(x: rect.width, y: y + rect.width))
+                band.line(to: NSPoint(x: rect.width, y: y + rect.width + 2))
+                band.line(to: NSPoint(x: 0, y: y + 2))
+                band.close()
+                band.fill()
+            }
             return true
         }
         image.isTemplate = false
@@ -187,7 +203,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// A row with no action of its own; a meeting gets a `Join Google Meet` submenu (menubar-app R24–R26).
     private func rowItem(_ row: MenuRow) -> NSMenuItem {
         let item = NSMenuItem(title: row.text, action: nil, keyEquivalent: "")
-        item.image = Self.colorBar(row.color)
+        item.image = Self.colorBar(row.color, striped: row.declinedByGuest)
         if let url = row.meetURL {
             item.submenu = NSMenu()
             item.submenu?.addItem(joinItem(url))

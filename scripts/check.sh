@@ -45,7 +45,7 @@ menu: 5:30 PM · Design sync > Join Google Meet
 menu: # Tomorrow
 menu: 12:00 PM · Lunch
 menu: # Sun Nov 22
-menu: 9:30 AM · Planning > Join Google Meet
+menu: ⚠ 9:30 AM · Planning > Join Google Meet
 menu: ---
 menu: Launch at login
 menu: ---

@@ -30,10 +30,11 @@ final class CalendarSource {
         return store.events(matching: predicate).compactMap(Self.event)
     }
 
-    /// The `Event` for `event`, `nil` when it is all-day, cancelled or declined.
+    /// The `Event` for `event`, `nil` when it is all-day, cancelled or declined by the user (menubar-app R12–R13, R43).
     private static func event(_ event: EKEvent) -> Event? {
         if event.isAllDay || event.status == .canceled { return nil }
-        if event.attendees?.contains(where: { $0.isCurrentUser && $0.participantStatus == .declined }) == true { return nil }
+        let declined = event.attendees?.filter { $0.participantStatus == .declined } ?? []
+        if declined.contains(where: \.isCurrentUser) { return nil }
         let color = event.calendar?.color?.usingColorSpace(.sRGB)
         return Event(
             title: event.title ?? "",
@@ -41,7 +42,8 @@ final class CalendarSource {
             end: event.endDate,
             color: color.map { RGB(red: $0.redComponent, green: $0.greenComponent, blue: $0.blueComponent) }
                 ?? RGB(red: 0.5, green: 0.5, blue: 0.5),
-            meetURL: MeetLink.find(in: event.notes)
+            meetURL: MeetLink.find(in: event.notes),
+            declinedByGuest: declined.contains { !$0.isCurrentUser }
         )
     }
 }

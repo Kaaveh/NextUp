@@ -14,16 +14,18 @@ enum SelfCheck {
     static let events: [Event] = {
         let blue = RGB(red: 0.10, green: 0.45, blue: 0.90)
         let orange = RGB(red: 0.95, green: 0.55, blue: 0.15)
-        func event(_ title: String, day: Int, _ hour: Int, _ minute: Int, minutes: Int, _ color: RGB, _ meet: String?) -> Event {
+        func event(_ title: String, day: Int, _ hour: Int, _ minute: Int, minutes: Int, _ color: RGB, _ meet: String?,
+                   declinedByGuest: Bool = false) -> Event {
             let start = date(day: day, hour: hour, minute: minute)
             return Event(title: title, start: start, end: start.addingTimeInterval(Double(minutes) * 60),
-                         color: color, meetURL: meet.flatMap { URL(string: "https://meet.google.com/\($0)") })
+                         color: color, meetURL: meet.flatMap { URL(string: "https://meet.google.com/\($0)") },
+                         declinedByGuest: declinedByGuest)
         }
         return [
             event("Standup", day: 20, 12, 0, minutes: 30, blue, "aaa-bbbb-ccc"),
             event("Design sync", day: 20, 17, 30, minutes: 60, blue, "abc-defg-hij"),
             event("Lunch", day: 21, 12, 0, minutes: 60, orange, nil),
-            event("Planning", day: 22, 9, 30, minutes: 60, blue, "ddd-eeee-fff"),
+            event("Planning", day: 22, 9, 30, minutes: 60, blue, "ddd-eeee-fff", declinedByGuest: true),
         ]
     }()
 
