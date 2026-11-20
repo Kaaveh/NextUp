@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     /// The one store for the app's life; `nil` in the self-check, which calls no EventKit.
     private var source: CalendarSource?
+    private var timer: Timer?
     /// The events of the last refresh; `nil` without calendar access.
     private var events: [Event]? = []
 
@@ -33,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let source = CalendarSource()
         self.source = source
         refresh()
+        observe()
         if CalendarSource.accessNotDetermined {
             Task {
                 await source.requestAccess()
@@ -48,6 +50,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             events = SelfCheck.events
         }
         drawBar()
+    }
+
+    // MARK: Triggers
+
+    /// Every trigger calls the same `refresh()` (menubar-app R15–R17).
+    private func observe() {
+        let center = NotificationCenter.default
+        for name in [Notification.Name.EKEventStoreChanged, .NSCalendarDayChanged] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.refresh() }
+            }
+        }
+        for name in [Notification.Name.NSSystemClockDidChange, .NSSystemTimeZoneDidChange] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.realign() }
+            }
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.realign() }
+        }
+        scheduleTimer()
+    }
+
+    /// After a wake or a clock change: the timer moves to the next minute boundary, then a refresh.
+    private func realign() {
+        scheduleTimer()
+        refresh()
+    }
+
+    /// A repeating timer from the next minute boundary, at most 1 s late.
+    private func scheduleTimer() {
+        timer?.invalidate()
+        let nextMinute = Date(timeIntervalSinceReferenceDate: (Date.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60 + 60)
+        let timer = Timer(fire: nextMinute, interval: 60, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refresh() }
+        }
+        timer.tolerance = 1
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
     }
 
     // MARK: Bar
