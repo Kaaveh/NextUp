@@ -7,6 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     /// The one store for the app's life; `nil` in the self-check, which calls no EventKit.
     private var source: CalendarSource?
+    /// `nil` in the self-check, which calls no UserNotifications (meeting-alerts R23).
+    private var alerts: MeetingAlerts?
     private var timer: Timer?
     /// The events of the last refresh; `nil` without calendar access.
     private var events: [Event]? = []
@@ -32,16 +34,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             SelfCheck.run(statusItem)
             return
         }
+        // The delegate before any `await`, so a click that launches NextUp reaches it (meeting-alerts R18).
+        let alerts = MeetingAlerts()
+        self.alerts = alerts
         let source = CalendarSource()
         self.source = source
         refresh()
         observe()
-        if CalendarSource.accessNotDetermined {
-            Task {
+        Task {
+            if CalendarSource.accessNotDetermined {
                 await source.requestAccess()
                 refresh()
             }
+            await alerts.requestAuthorization()
         }
+    }
+
+    /// Pending alerts go before the process does (meeting-alerts R14).
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let alerts else { return .terminateNow }
+        Task {
+            await alerts.removeAll()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 
     func refresh() {
@@ -51,6 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             events = SelfCheck.events
         }
         drawBar()
+        alerts?.update(AlertPlan.alerts(for: events ?? [], now: now, calendar: calendar, locale: locale), now: now)
     }
 
     // MARK: Triggers
@@ -65,7 +82,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         for name in [Notification.Name.NSSystemClockDidChange, .NSSystemTimeZoneDidChange] {
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.realign() }
+                MainActor.assumeIsolated {
+                    self?.alerts?.forget()
+                    self?.realign()
+                }
             }
         }
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in

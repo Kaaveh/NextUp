@@ -99,7 +99,9 @@ Support/Info.plist, scripts/check.sh            the alert style key and its chec
 
 ## Tech Stack, Commands, Code Style
 
-Same as [SPEC-menubar-app.md](SPEC-menubar-app.md), plus UserNotifications. Its calls use their `async` forms, and the delegate's two methods are the `async` ones.
+Same as [SPEC-menubar-app.md](SPEC-menubar-app.md), plus UserNotifications. Its calls use their `async` forms, and the delegate's two methods are the `async` ones, `nonisolated`, since macOS calls them off the main thread.
+
+- Each update's removals and adds run in one task chained after the previous update's, so a removal can't overtake an older add. Quitting (R14) waits for that chain first, and ignores any update after it.
 
 Checks (the gate, unattended): `scripts/check.sh`
 
