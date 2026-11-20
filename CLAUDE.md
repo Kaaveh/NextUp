@@ -11,13 +11,20 @@ Spec first, then a fresh session implements it. `docs/specs/README.md` is the co
 ```
 swift build
 swift test
+scripts/check.sh                                        # the gate: rules, bundle, self-check (ad-hoc, no prompts)
+scripts/build-app.sh                                    # build/NextUp.app, signed with $NEXTUP_SIGN_IDENTITY or ad-hoc
+build/NextUp.app/Contents/MacOS/NextUp --self-check     # sample data, no prompts; needs the logged-in desktop session
+scripts/install.sh                                      # a person only: keychain identity, /Applications/NextUp.app, open
+footprint -p "$(pgrep -x NextUp)"                       # idle memory of the installed app
 ```
+
+Run `scripts/check.sh` before each commit.
 
 ## Layout
 
 - `NextUpCore` (`Sources/NextUpCore/`): the pure rules (Meet link, order, countdown, bar text, menu sections). Foundation only.
 - `NextUpCoreTests` (`Tests/NextUpCoreTests/`): Swift Testing table tests for those rules.
-- `NextUp` (`Sources/NextUp/`, arrives with `menubar-app`): the AppKit shell that reads events and draws what `NextUpCore` returns.
+- `NextUp` (`Sources/NextUp/`): the AppKit shell that reads events and draws what `NextUpCore` returns. `Support/Info.plist` is its bundle's plist; `scripts/` builds, checks and installs it.
 
 ## Conventions
 
@@ -31,4 +38,10 @@ This repo may become public. Samples are invented (`Design sync`). No real event
 
 ## Never, in an automated session
 
-Run anything that asks for calendar, notification, keychain or login-item permission.
+- Run anything that asks for calendar, notification, keychain or login-item permission.
+- Start NextUp without `--self-check`: not with `open`, not by running the binary, not with `swift run`.
+- Run `scripts/install.sh`, `tccutil` or `security`, or sign with anything but `-` (ad-hoc).
+- Call `SMAppService` `register()` anywhere but the `Launch at login` menu action.
+- Import SwiftUI or add network code.
+- Log event titles or links, or commit identity names, team ids or hashes.
+- Read the user's calendar from a test or a script.
