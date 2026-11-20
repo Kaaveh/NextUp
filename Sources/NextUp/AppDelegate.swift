@@ -158,6 +158,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for section in sections {
                 menu.addItem(.sectionHeader(title: section.header))
                 for row in section.rows { menu.addItem(rowItem(row)) }
+                // The menu's first row gets its Join right under it (menubar-app R26).
+                if section == sections.first, let url = section.rows.first?.meetURL {
+                    menu.insertItem(joinItem(url), at: 2)
+                }
             }
         } else {
             menu.addItem(.sectionHeader(title: "No calendar access"))
@@ -185,14 +189,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let item = NSMenuItem(title: row.text, action: nil, keyEquivalent: "")
         item.image = Self.colorBar(row.color)
         if let url = row.meetURL {
-            let join = NSMenuItem(title: "Join Google Meet", action: #selector(join(_:)), keyEquivalent: "")
-            join.target = self
-            join.representedObject = url
             item.submenu = NSMenu()
-            item.submenu?.addItem(join)
+            item.submenu?.addItem(joinItem(url))
         }
         return item
     }
+
+    private func joinItem(_ url: URL) -> NSMenuItem {
+        let join = NSMenuItem(title: "Join Google Meet", action: #selector(join(_:)), keyEquivalent: "")
+        join.target = self
+        join.representedObject = url
+        join.image = Self.meetLogo
+        return join
+    }
+
+    /// `Contents/Resources/meet.png`, drawn at 16 × 16 pt; `nil` (no icon) if the bundle lacks it.
+    private static let meetLogo: NSImage? = {
+        let image = Bundle.main.image(forResource: "meet")
+        image?.size = NSSize(width: 16, height: 16)
+        return image
+    }()
 
     /// The only place that calls `register()` (menubar-app R31).
     @objc private func toggleLaunchAtLogin() {
