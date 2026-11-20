@@ -79,7 +79,9 @@ public enum Agenda {
 
     /// 00:00 of the `n`th day after today, through `Calendar` rather than 86 400 s steps (core-rules R21).
     static func day(after n: Int, from now: Date, calendar: Calendar) -> Date {
-        calendar.date(byAdding: .day, value: n, to: calendar.startOfDay(for: now))!
+        // Add first, then take the start of day: a day whose midnight is skipped by DST starts at 01:00,
+        // and adding days to that start would keep the 01:00.
+        calendar.startOfDay(for: calendar.date(byAdding: .day, value: n, to: now)!)
     }
 
     /// "Design sync · in 5 h 25 m" for the next event, `nil` when none is coming (core-rules R18–R19).

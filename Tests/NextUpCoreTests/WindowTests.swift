@@ -17,4 +17,12 @@ import Testing
         #expect(window.end == at(2026, 3, 10, in: newYork))
         #expect(window.end.timeIntervalSince(at(2026, 3, 7, in: newYork)) == 71 * 3600)
     }
+
+    // core-rules R20–R21: in Santiago, 2026-09-06 has no 00:00 (daylight saving starts at midnight), so today starts at 01:00
+    @Test func todayWithoutMidnightStillEndsAtMidnight() {
+        var santiago = Calendar(identifier: .gregorian)
+        santiago.timeZone = TimeZone(identifier: "America/Santiago")!
+        let window = Agenda.window(now: at(2026, 9, 6, 12, in: santiago), calendar: santiago)
+        #expect(window.end == at(2026, 9, 9, in: santiago))
+    }
 }
