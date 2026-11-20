@@ -57,8 +57,10 @@ final class MeetingAlerts: NSObject, UNUserNotificationCenterDelegate {
             }
             // A request added without permission may have been dropped: a new status schedules from scratch (R16).
             let status = await center.notificationSettings().authorizationStatus
-            if status != self.status {
-                self.status = status
+            // The first read only records the status: this update's adds already ran under it.
+            let changed = self.status.map { $0 != status } ?? false
+            self.status = status
+            if changed {
                 forget()
                 update(plan, now: Date())
             }

@@ -47,6 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 refresh()
             }
             await alerts.requestAuthorization()
+            // Reads the new status now, not at the next tick, and reschedules if it changed (R16).
+            refresh()
         }
     }
 
