@@ -31,6 +31,7 @@ codesign --verify --strict "$app" || fail "codesign --verify --strict failed"
 [ "$(key LSUIElement)" = true ] || fail "LSUIElement isn't true"
 [ "$(key CFBundleIdentifier)" = ir.kaavehdev.nextup ] || fail "CFBundleIdentifier isn't ir.kaavehdev.nextup"
 key NSCalendarsFullAccessUsageDescription >/dev/null || fail "NSCalendarsFullAccessUsageDescription is missing"
+[ "$(key NSUserNotificationAlertStyle)" = alert ] || fail "NSUserNotificationAlertStyle isn't alert"
 
 # 6. The self-check: sample events, no prompts.
 expected=$(cat <<'LINES'

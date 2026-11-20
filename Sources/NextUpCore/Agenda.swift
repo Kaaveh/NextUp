@@ -49,12 +49,7 @@ public enum Agenda {
         let events = ordered(events)
         let starting = { (from: Date, to: Date) in events.filter { $0.start > now && from <= $0.start && $0.start < to } }
 
-        let time = DateFormatter()
-        time.locale = locale
-        time.calendar = calendar
-        time.timeZone = calendar.timeZone
-        time.dateStyle = .none
-        time.timeStyle = .short
+        let time = shortTime(calendar: calendar, locale: locale)
         let date = DateFormatter()
         date.locale = locale
         date.calendar = calendar
@@ -75,6 +70,17 @@ public enum Agenda {
                         color: $0.color, meetURL: $0.meetURL)
             })
         }
+    }
+
+    /// The locale's short time in the calendar's time zone: `5:30 PM` in `en_US` (core-rules R25).
+    static func shortTime(calendar: Calendar, locale: Locale) -> DateFormatter {
+        let time = DateFormatter()
+        time.locale = locale
+        time.calendar = calendar
+        time.timeZone = calendar.timeZone
+        time.dateStyle = .none
+        time.timeStyle = .short
+        return time
     }
 
     /// 00:00 of the `n`th day after today, through `Calendar` rather than 86 400 s steps (core-rules R21).

@@ -1,6 +1,6 @@
 # Spec: meeting-alerts
 
-Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app` being merged. Status: specified, not built.
+Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open.
 
 ## Objective
 
@@ -99,7 +99,10 @@ Support/Info.plist, scripts/check.sh            the alert style key and its chec
 
 ## Tech Stack, Commands, Code Style
 
-Same as [SPEC-menubar-app.md](SPEC-menubar-app.md), plus UserNotifications. Its calls use their `async` forms, and the delegate's two methods are the `async` ones.
+Same as [SPEC-menubar-app.md](SPEC-menubar-app.md), plus UserNotifications. Its calls use their `async` forms, and the delegate's two methods are the `async` ones, `nonisolated`, since macOS calls them off the main thread.
+
+- Each update's removals and adds run in one task chained after the previous update's, so a removal can't overtake an older add. Quitting (R14) waits for that chain first, and ignores any update after it.
+- R16's first status read only records the status, since that update's adds ran under it; a refresh follows the authorization request (R15), so a new status counts at once rather than at the next tick.
 
 Checks (the gate, unattended): `scripts/check.sh`
 
@@ -124,12 +127,6 @@ Checks (the gate, unattended): `scripts/check.sh`
 
 Done when: the alert plan and its changes are tested; scheduling, the Join action, quit and the alerts-off item are built; `scripts/check.sh` passes; the manual QA list stays open.
 
-Automated (the Checks cover them):
-
-- [ ] `scripts/check.sh` exits with 0, with the self-check's output unchanged.
-- [ ] Every row of R7 is a test.
-- [ ] The bundle's `Info.plist` holds `NSUserNotificationAlertStyle`.
-
 Manual QA (the user, on the installed app; stays open after the build):
 
 - [ ] After the first install with this module, macOS asks once to allow NextUp's notifications.
@@ -144,10 +141,3 @@ Manual QA (the user, on the installed app; stays open after the build):
 ## Open Questions
 
 None of its own. A Focus mode silences the alert unless NextUp is on its allowed list; breaking through needs an entitlement and is out of scope (see the map).
-
-## Tasks (build order)
-
-- [ ] T1. `Alert`, `AlertPlan.alerts`, `AlertPlan.changes` and their tests (R1–R7). Verify: `swift test`.
-- [ ] T2. `MeetingAlerts` in the shell: the delegate, the category and its action, permission, scheduling after each refresh, the first-run and clock rules, quit; the plist key and its check (R8–R15, R18–R24). Verify: `scripts/check.sh`, with the self-check's output unchanged.
-- [ ] T3. The kept permission status, rescheduling when it changes, and the alerts-off item (R16–R17). Verify: `scripts/check.sh`.
-- [ ] T4. Docs and spec workflow: add the notification permission to `CLAUDE.md` and `README.md`; delete this section and the automated Success Criteria; set the status line and the row in `docs/specs/README.md` to built with manual QA open. Verify: `scripts/check.sh`.

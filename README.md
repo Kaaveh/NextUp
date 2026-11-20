@@ -1,6 +1,6 @@
 # NextUp
 
-NextUp is a small macOS menu bar app that shows your next calendar event and a countdown, lists today and the next 2 days, and puts a Google Meet link one click away. It exists to replace a much heavier calendar app's menu bar item for this one job, with a footprint of a few tens of megabytes.
+NextUp is a small macOS menu bar app that shows your next calendar event and a countdown, lists today and the next 2 days, and puts a Google Meet link one click away, with a notification one minute before each meeting. It exists to replace a much heavier calendar app's menu bar item for this one job, with a footprint of a few tens of megabytes.
 
 ## Requirements
 
@@ -28,6 +28,7 @@ It builds `NextUp.app`, signs it with the first Apple Development identity in yo
 ## Permissions
 
 - **Calendar.** On first launch macOS asks for full access to your calendars. NextUp reads today and the next 2 days from every calendar on your Mac; the events stay on this Mac. Without access the menu bar shows a calendar icon with an exclamation badge, and the menu offers `Open Privacy Settings…` (Privacy & Security → Calendars).
+- **Notifications.** On first launch macOS also asks to allow NextUp's notifications. One minute before an event with a Google Meet link starts, a notification shows its title and start time; `Join`, or a click on it, opens the meeting. NextUp asks for the style that stays on screen; if it leaves by itself, set NextUp's alert style to Persistent in System Settings → Notifications. With notifications off, the menu offers `Turn on meeting alerts…`. Quitting NextUp cancels the pending ones.
 - **Launch at login.** Ticking `Launch at login` in the menu adds NextUp to System Settings → General → Login Items.
 
 To see the first-run prompt again: `tccutil reset Calendar ir.kaavehdev.nextup`, while NextUp is in `/Applications`.
