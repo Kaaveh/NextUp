@@ -24,6 +24,11 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
     pgrep -x NextUp >/dev/null || break
     sleep 0.5
 done
+# A survivor would get `open`'s activation instead of the new build.
+if pgrep -x NextUp >/dev/null; then
+    echo "error: NextUp is still running; quit it and run install.sh again" >&2
+    exit 1
+fi
 rm -rf /Applications/NextUp.app
 ditto build/NextUp.app /Applications/NextUp.app
 open /Applications/NextUp.app

@@ -38,7 +38,11 @@ enum SelfCheck {
         for item in menu.items { print(plain("menu: " + line(item))) }
         Task {
             try? await Task.sleep(for: .seconds(5))
-            print(String(format: "footprint: %.1f MB", Double(footprint()) / 1_048_576))
+            guard let bytes = footprint() else {
+                FileHandle.standardError.write(Data("NextUp: proc_pid_rusage failed\n".utf8))
+                exit(1)
+            }
+            print(String(format: "footprint: %.1f MB", Double(bytes) / 1_048_576))
             exit(0)
         }
     }
@@ -55,12 +59,12 @@ enum SelfCheck {
         text.replacingOccurrences(of: "\u{202F}", with: " ")
     }
 
-    /// This process's physical footprint in bytes, as `footprint` reports it.
-    private static func footprint() -> UInt64 {
+    /// This process's physical footprint in bytes, as `footprint` reports it; `nil` when the call fails.
+    private static func footprint() -> UInt64? {
         var info = rusage_info_v2()
         let result = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(getpid(), RUSAGE_INFO_V2, $0) }
         }
-        return result == 0 ? info.ri_phys_footprint : 0
+        return result == 0 ? info.ri_phys_footprint : nil
     }
 }
