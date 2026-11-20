@@ -88,12 +88,12 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R33. It calls no EventKit, no ServiceManagement and no `NSWorkspace.open`, so it can't raise a prompt or change anything on the Mac. This outranks R32: `Launch at login` is drawn unchecked, and no refresh trigger (R16) is installed, since it exits after 5 s.
 - R34. Sample events (GMT):
 
-  | Title | Start | End | Colour (red, green, blue) | Meet link |
-  |---|---|---|---|---|
-  | `Standup` | 2026-11-20 12:00 | 12:30 | 0.10, 0.45, 0.90 | `https://meet.google.com/aaa-bbbb-ccc` |
-  | `Design sync` | 2026-11-20 17:30 | 18:30 | 0.10, 0.45, 0.90 | `https://meet.google.com/abc-defg-hij` |
-  | `Lunch` | 2026-11-21 12:00 | 13:00 | 0.95, 0.55, 0.15 | none |
-  | `Planning` | 2026-11-22 09:30 | 10:30 | 0.10, 0.45, 0.90 | `https://meet.google.com/ddd-eeee-fff` |
+  | Title | Start | End | Colour (red, green, blue) | Meet link | Declined by a guest |
+  |---|---|---|---|---|---|
+  | `Standup` | 2026-11-20 12:00 | 12:30 | 0.10, 0.45, 0.90 | `https://meet.google.com/aaa-bbbb-ccc` | no |
+  | `Design sync` | 2026-11-20 17:30 | 18:30 | 0.10, 0.45, 0.90 | `https://meet.google.com/abc-defg-hij` | no |
+  | `Lunch` | 2026-11-21 12:00 | 13:00 | 0.95, 0.55, 0.15 | none | no |
+  | `Planning` | 2026-11-22 09:30 | 10:30 | 0.10, 0.45, 0.90 | `https://meet.google.com/ddd-eeee-fff` | yes |
 
 - R35. It prints to stdout:
   - `bar: ` and the button's title, trimmed;
@@ -111,7 +111,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   menu: # Tomorrow
   menu: 12:00 PM · Lunch
   menu: # Sun Nov 22
-  menu: 9:30 AM · Planning > Join Google Meet
+  menu: ⚠ 9:30 AM · Planning > Join Google Meet
   menu: ---
   menu: Launch at login
   menu: ---
@@ -139,6 +139,11 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R40. Target: a physical footprint under 30 MB at idle. It is measured on the installed app, after 10 idle minutes, with `footprint -p "$(pgrep -x NextUp)"`; the header line of its output holds `Footprint: <n> MB`.
 - R41. The self-check's number (R37) is the floor with no calendar code running. It goes into the pull request's text.
 - R42. A number of 30 MB or more, from either measurement, is recorded as an open item in the pull request and in this spec's Open Questions. The code isn't restructured to chase the target.
+
+**Declined by a guest**
+- R43. Mapping (R12) sets `declinedByGuest` when `attendees` holds a participant with `isCurrentUser == false` and `participantStatus == .declined`. R13's skip of an event the user declined still comes first.
+- R44. A bar or row with `declinedByGuest` gets a striped colour bar instead of the solid one: the size and corner radius of R21, filled with 45° diagonal stripes, 2 pt of the event's colour then 2 pt transparent, not a template. The `⚠ ` comes with the text (core-rules R32).
+- R45. Nothing else changes for such an event: it gets its alert (meeting-alerts), its Join items (R26) and its place in the order.
 
 ## Interface
 
@@ -228,6 +233,7 @@ Manual QA (the user, on the installed app; stays open after the build). Run `scr
 - [ ] The bar and the menu look like the reference: colour bar, gap, text; grey headers; rows with their bars; a chevron on meetings.
 - [ ] The menu lists what is running under `Now`, later today under `Upcoming in …`, then `Tomorrow` and the day after. Ended, all-day, cancelled and declined events don't appear.
 - [ ] `Join Google Meet` opens the right meeting in the browser.
+- [ ] An event a guest declined shows the striped bar and `⚠` in the bar and in its menu row. (Whether the Google CalDAV feed gives EventKit the guests' statuses is checked here.)
 - [ ] An event added, moved or deleted in Calendar shows in the bar within a minute.
 - [ ] After sleep, and after midnight, the bar and the headers are right.
 - [ ] With calendar access switched off in System Settings, the bar shows the badge icon and the menu offers `Open Privacy Settings…`, which lands on Privacy & Security → Calendars. Switched back on, the events return within a minute, without a relaunch.

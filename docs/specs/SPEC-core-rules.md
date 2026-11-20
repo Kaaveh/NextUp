@@ -15,7 +15,7 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
 - R4. The library never reads the clock, the calendar or the locale itself (`Date()`, `Calendar.current`, `Locale.current`). Callers pass `now`, `calendar` and `locale`, so every rule runs on fixed values in a test.
 
 **Event**
-- R5. `Event` is a value with `title`, `start`, `end`, `color` and `meetURL`. It has no identifier, no notes and no calendar name.
+- R5. `Event` is a value with `title`, `start`, `end`, `color`, `meetURL` and `declinedByGuest` (R31). It has no identifier, no notes and no calendar name.
 - R6. `RGB` holds a calendar's colour as sRGB `red`, `green` and `blue`, each in 0…1.
 
 **Meet link**
@@ -133,6 +133,18 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
   7. never, in an automated session: run anything that asks for calendar, notification, keychain or login-item permission.
 - R30. `README.md`, short: what NextUp is and why, in one paragraph; what it needs (macOS 14 or later to run, Xcode with Swift 6.2 or later to build); `swift build` and `swift test`; one line saying it reads calendars on the Mac and has no network code.
 
+**Declined by a guest**
+- R31. `Event.declinedByGuest` is `true` when a guest other than the user declined the event (the shell decides it: menubar-app R43); it defaults to `false`. `BarContent` and `MenuRow` carry it from their event, so the shell knows to draw the striped bar.
+- R32. When it is `true`, the bar's text (R18) and the row's text (R24) start with `⚠ ` (U+26A0 and a space), as in Notion Calendar. The prefix isn't counted in the title cut of R16.
+- R33. It changes nothing else: order (R10), next (R11), the sections (R22–R23), the Meet link and the alert plan (meeting-alerts) stay as they are.
+- R34. Cases, now Friday 2026-11-20 12:05:13, locale `en_US`, an event at 17:30:
+
+  | Title | `declinedByGuest` | Bar | Row |
+  |---|---|---|---|
+  | `Design sync` | `false` | `Design sync · in 5 h 25 m` | `5:30 PM · Design sync` |
+  | `Design sync` | `true` | `⚠ Design sync · in 5 h 25 m` | `⚠ 5:30 PM · Design sync` |
+  | `Quarterly roadmap review with the whole team` | `true` | `⚠ Quarterly roadmap review with… · in 5 h 25 m` | `⚠ 5:30 PM · Quarterly roadmap review with the whole team` |
+
 ## Interface (provided)
 
 What `menubar-app` reads. Each struct also has a public memberwise initializer. Order, next, countdown and shown title stay internal and are tested through `@testable import`.
@@ -148,17 +160,20 @@ public struct Event: Equatable, Sendable {
     public var end: Date
     public var color: RGB                               // the calendar's colour
     public var meetURL: URL?
+    public var declinedByGuest: Bool                    // a guest declined (R31); defaults to false
 }
 
 public struct BarContent: Equatable, Sendable {
-    public var text: String                             // "Design sync · in 5 h 25 m"
+    public var text: String                             // "Design sync · in 5 h 25 m", "⚠ Design sync · in 5 h 25 m"
     public var color: RGB
+    public var declinedByGuest: Bool
 }
 
 public struct MenuRow: Equatable, Sendable {
-    public var text: String                             // "5:30 PM · Design sync"
+    public var text: String                             // "5:30 PM · Design sync", "⚠ 5:30 PM · Design sync"
     public var color: RGB
     public var meetURL: URL?
+    public var declinedByGuest: Bool
 }
 
 public struct MenuSection: Equatable, Sendable {
