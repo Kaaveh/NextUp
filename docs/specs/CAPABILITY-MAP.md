@@ -55,6 +55,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 | A keychain dialog when `codesign` uses an Apple Development identity from a script | menubar-app manual QA |
 | The calendar grant surviving a rebuild signed with the same Apple Development identity | menubar-app manual QA |
 | The System Settings links landing on the right pane | manual QA of both app modules |
+| Guests' statuses (a declined guest) reaching `EKEvent.attendees` from the Google CalDAV source | menubar-app manual QA |
 | Idle memory with real calendars against the 30 MB target | menubar-app manual QA and R40–R42 |
 | What Notion Calendar does where the screenshots don't show it | Open Questions below |
 
@@ -73,7 +74,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 - Unattended checks never raise a prompt. They run `NextUp --self-check`, which uses sample events and touches no calendar, notification or login-item API. Everything else is manual QA.
 - Memory: under 30 MB of physical footprint at idle. A higher measured number is recorded as an open item; the code isn't contorted to reach the target.
 - The minimum is macOS 14, the lowest version that has every API used. Only macOS 27 is tested.
-- The look is copied from Notion Calendar's menu bar item, from two reference screenshots that stay out of the repo: a thin colour bar and `<title> · in 5 h 24 m` in the bar, and a native menu with grey section headers and rows of `<bar> 5:30 PM · <title>`.
+- The look is copied from Notion Calendar's menu bar item, from two reference screenshots that stay out of the repo: a thin colour bar and `<title> · in 5 h 24 m` in the bar, and a native menu with grey section headers and rows of `<bar> 5:30 PM · <title>`. An event a guest declined gets a striped bar and a `⚠ ` before the text.
 - UI text is English. The clock format follows the system.
 - Privacy: no real event titles, people, calendar names, email addresses, home-folder paths, identity names, team ids or hashes anywhere in the repo. NextUp logs no event data.
 

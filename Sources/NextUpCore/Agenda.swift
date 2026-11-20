@@ -4,10 +4,12 @@ import Foundation
 public struct BarContent: Equatable, Sendable {
     public var text: String
     public var color: RGB
+    public var declinedByGuest: Bool
 
-    public init(text: String, color: RGB) {
+    public init(text: String, color: RGB, declinedByGuest: Bool = false) {
         self.text = text
         self.color = color
+        self.declinedByGuest = declinedByGuest
     }
 }
 
@@ -16,11 +18,13 @@ public struct MenuRow: Equatable, Sendable {
     public var text: String
     public var color: RGB
     public var meetURL: URL?
+    public var declinedByGuest: Bool
 
-    public init(text: String, color: RGB, meetURL: URL?) {
+    public init(text: String, color: RGB, meetURL: URL?, declinedByGuest: Bool = false) {
         self.text = text
         self.color = color
         self.meetURL = meetURL
+        self.declinedByGuest = declinedByGuest
     }
 }
 
@@ -66,8 +70,8 @@ public enum Agenda {
         ]
         return groups.filter { !$0.1.isEmpty }.map { header, events in
             MenuSection(header: header, rows: events.map {
-                MenuRow(text: "\(time.string(from: $0.start)) · \(shownTitle($0.title, limit: 50))",
-                        color: $0.color, meetURL: $0.meetURL)
+                MenuRow(text: flag($0) + "\(time.string(from: $0.start)) · \(shownTitle($0.title, limit: 50))",
+                        color: $0.color, meetURL: $0.meetURL, declinedByGuest: $0.declinedByGuest)
             })
         }
     }
@@ -94,9 +98,15 @@ public enum Agenda {
     public static func bar(for events: [Event], now: Date) -> BarContent? {
         guard let event = next(in: events, now: now) else { return nil }
         return BarContent(
-            text: "\(shownTitle(event.title, limit: 30)) · \(countdown(from: now, to: event.start))",
-            color: event.color
+            text: flag(event) + "\(shownTitle(event.title, limit: 30)) · \(countdown(from: now, to: event.start))",
+            color: event.color,
+            declinedByGuest: event.declinedByGuest
         )
+    }
+
+    /// `⚠ ` in front of the text of an event a guest declined, outside the title cut (core-rules R32).
+    static func flag(_ event: Event) -> String {
+        event.declinedByGuest ? "\u{26A0} " : ""
     }
 
     /// Start ascending, then events with a Meet link, then title ascending (core-rules R10).
