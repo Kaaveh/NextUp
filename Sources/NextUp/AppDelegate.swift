@@ -1,5 +1,6 @@
 import AppKit
 import NextUpCore
+import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let selfCheck: Bool
@@ -143,7 +144,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(settings)
         }
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Launch at login", action: nil, keyEquivalent: ""))
+        let login = NSMenuItem(title: "Launch at login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        login.target = self
+        // The self-check reads no ServiceManagement and draws it unchecked (menubar-app R33).
+        login.state = !selfCheck && SMAppService.mainApp.status == .enabled ? .on : .off
+        menu.addItem(login)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit NextUp", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
@@ -160,6 +165,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.submenu?.addItem(join)
         }
         return item
+    }
+
+    /// The only place that calls `register()` (menubar-app R31).
+    @objc private func toggleLaunchAtLogin() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled { try service.unregister() } else { try service.register() }
+            if service.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+        } catch {
+            NSLog("NextUp: Launch at login failed: %@", String(describing: error))
+        }
     }
 
     @objc private func openPrivacySettings() {
