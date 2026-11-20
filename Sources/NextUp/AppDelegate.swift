@@ -133,12 +133,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    /// 3 × 14 pt, corner radius 1.5 pt, in the event's colour (menubar-app R21); `striped`: 45° stripes,
+    /// 4 × 16 pt, corner radius 2 pt, in the event's colour (menubar-app R21); `striped`: 45° stripes,
     /// 2 pt of colour then 2 pt clear, for an event a guest declined (R44).
     private static func colorBar(_ color: RGB, striped: Bool = false) -> NSImage {
-        let image = NSImage(size: NSSize(width: 3, height: 14), flipped: false) { rect in
+        let image = NSImage(size: NSSize(width: 4, height: 16), flipped: false) { rect in
             NSColor(srgbRed: color.red, green: color.green, blue: color.blue, alpha: 1).setFill()
-            let shape = NSBezierPath(roundedRect: rect, xRadius: 1.5, yRadius: 1.5)
+            let shape = NSBezierPath(roundedRect: rect, xRadius: 2, yRadius: 2)
             guard striped else {
                 shape.fill()
                 return true

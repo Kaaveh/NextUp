@@ -65,7 +65,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 **Bar**
 - R19. One `NSStatusItem` of variable length.
 - R20. With a result from `Agenda.bar`: the button's image is the colour bar, leading, and its title is the text.
-- R21. The colour bar is an image of 3 × 14 pt with a corner radius of 1.5 pt, filled with the event's colour, not a template. A menu row uses the same image.
+- R21. The colour bar is an image of 4 × 16 pt with a corner radius of 2 pt, filled with the event's colour, not a template. A menu row uses the same image.
 - R22. Without a bar text the button shows an SF Symbol as a template image, with an accessibility description and no title:
   - `calendar` when nothing is coming, described as `NextUp: no upcoming events`;
   - `calendar.badge.exclamationmark` when NextUp has no calendar access, described as `NextUp: no calendar access`.
