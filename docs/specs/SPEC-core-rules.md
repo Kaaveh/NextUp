@@ -1,6 +1,6 @@
 # Spec: core-rules
 
-Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: specified, not built.
+Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built.
 
 ## Objective
 
@@ -184,7 +184,7 @@ Package.swift
 Sources/NextUpCore/Event.swift          Event, RGB
 Sources/NextUpCore/MeetLink.swift       the link in the notes
 Sources/NextUpCore/Agenda.swift         order, next, countdown, titles, bar, window, sections
-Tests/NextUpCoreTests/                  one file per rule family
+Tests/NextUpCoreTests/                  one file per rule family, plus Support.swift (the fixed calendar and `at(…)`)
 CLAUDE.md, README.md, .gitignore
 ```
 
@@ -249,21 +249,8 @@ func countdown(h: Int, m: Int, s: Int, expected: String) {
 
 Done when: `NextUpCore` holds the Meet-link, bar and menu rules with every case of this spec as a passing test, and `swift build && swift test` pass.
 
-Automated (the Checks cover them):
-
-- [ ] `swift build && swift test` pass.
-- [ ] Every row of R9, R10, R14, R17, R21, R26 and R27 is a test.
-- [ ] `grep -rhE '^import ' Sources/NextUpCore | sort -u` prints only `import Foundation`.
-
 Manual QA: none.
 
 ## Open Questions
 
 None of its own. The product assumptions behind these rules are in the map.
-
-## Tasks (build order)
-
-- [ ] T1. Scaffold and first rule: `.gitignore`, `Package.swift`, `CLAUDE.md`, `README.md`, `Event`, `RGB`, `MeetLink` and its tests (R1–R9, R28–R30). Verify: `swift build && swift test`.
-- [ ] T2. Order, next, countdown, titles and `Agenda.bar`, with their tests (R10–R19). Verify: `swift test`.
-- [ ] T3. `Agenda.window` and `Agenda.sections`, with their tests (R20–R27). Verify: `swift test`.
-- [ ] T4. Spec workflow: delete this section and the automated Success Criteria, set the status line and the row in `docs/specs/README.md` to built. Verify: `swift build && swift test`.
