@@ -4,6 +4,8 @@ import NextUpCore
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let selfCheck: Bool
     private var statusItem: NSStatusItem!
+    /// The one store for the app's life; `nil` in the self-check, which calls no EventKit.
+    private var source: CalendarSource?
     /// The events of the last refresh; `nil` without calendar access.
     private var events: [Event]? = []
 
@@ -23,12 +25,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.autoenablesItems = false
         menu.delegate = self
         statusItem.menu = menu
+        if selfCheck {
+            refresh()
+            SelfCheck.run(statusItem)
+            return
+        }
+        let source = CalendarSource()
+        self.source = source
         refresh()
-        if selfCheck { SelfCheck.run(statusItem) }
+        if CalendarSource.accessNotDetermined {
+            Task {
+                await source.requestAccess()
+                refresh()
+            }
+        }
     }
 
     func refresh() {
-        events = selfCheck ? SelfCheck.events : []
+        if let source {
+            events = source.events(in: Agenda.window(now: now, calendar: calendar))
+        } else {
+            events = SelfCheck.events
+        }
         drawBar()
     }
 
@@ -77,6 +95,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 menu.addItem(.sectionHeader(title: section.header))
                 for row in section.rows { menu.addItem(rowItem(row)) }
             }
+        } else {
+            menu.addItem(.sectionHeader(title: "No calendar access"))
+            let settings = NSMenuItem(title: "Open Privacy Settings…", action: #selector(openPrivacySettings), keyEquivalent: "")
+            settings.target = self
+            menu.addItem(settings)
         }
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Launch at login", action: nil, keyEquivalent: ""))
@@ -96,6 +119,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.submenu?.addItem(join)
         }
         return item
+    }
+
+    @objc private func openPrivacySettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Calendars")!
+        NSWorkspace.shared.open(url)
     }
 
     @objc private func join(_ sender: NSMenuItem) {
