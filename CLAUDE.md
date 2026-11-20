@@ -1,6 +1,6 @@
 # NextUp
 
-NextUp is a macOS menu bar app that shows the next calendar event with a countdown and lists today and the next 2 days. A meeting with a Google Meet link is one Join away. Limits: Swift and AppKit, no SwiftUI, no network code, no third-party packages, EventKit as the only source of events.
+NextUp is a macOS menu bar app that shows the next calendar event with a countdown and lists today and the next 2 days. A meeting with a Google Meet link is one Join away, and a notification with Join arrives one minute before it starts. Limits: Swift and AppKit, no SwiftUI, no network code, no third-party packages, EventKit as the only source of events.
 
 ## Workflow
 
@@ -22,7 +22,7 @@ Run `scripts/check.sh` before each commit.
 
 ## Layout
 
-- `NextUpCore` (`Sources/NextUpCore/`): the pure rules (Meet link, order, countdown, bar text, menu sections). Foundation only.
+- `NextUpCore` (`Sources/NextUpCore/`): the pure rules (Meet link, order, countdown, bar text, menu sections, the alert plan). Foundation only.
 - `NextUpCoreTests` (`Tests/NextUpCoreTests/`): Swift Testing table tests for those rules.
 - `NextUp` (`Sources/NextUp/`): the AppKit shell that reads events and draws what `NextUpCore` returns. `Support/Info.plist` is its bundle's plist; `scripts/` builds, checks and installs it.
 
@@ -39,6 +39,7 @@ This repo may become public. Samples are invented (`Design sync`). No real event
 ## Never, in an automated session
 
 - Run anything that asks for calendar, notification, keychain or login-item permission.
+- Call a UserNotifications API in `--self-check`, a test or a script, or post a notification to try it out.
 - Start NextUp without `--self-check`: not with `open`, not by running the binary, not with `swift run`.
 - Run `scripts/install.sh`, `tccutil` or `security`, or sign with anything but `-` (ad-hoc).
 - Call `SMAppService` `register()` anywhere but the `Launch at login` menu action.
