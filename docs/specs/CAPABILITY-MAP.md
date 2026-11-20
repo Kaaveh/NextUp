@@ -83,7 +83,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 2. The app is installed at `/Applications/NextUp.app` (menubar-app R39).
 3. The install signs with the first Apple Development identity in the keychain, unless `NEXTUP_SIGN_IDENTITY` names another (menubar-app R39).
 4. The bar shows the next event that hasn't started. A running event shows only in the menu (core-rules R11).
-5. Join sits in the meeting row's submenu, as the reference's chevron suggests. A click on a row itself does nothing (menubar-app R25–R26).
+5. Join sits in the meeting row's submenu, and the menu's first row also has it right under the row, with the Google Meet logo, as in the reference. A click on a row itself does nothing (menubar-app R25–R26).
 6. The menu's sections are `Now`, `Upcoming in …` for later today, `Tomorrow`, and the day after by date. Ended events aren't listed (core-rules R22–R23).
 7. All-day, cancelled and declined events are skipped (menubar-app R13).
 8. Only an event with a Meet link gets a notification. It plays the default sound, a click on its body joins too, and it asks macOS for the style that stays on screen (meeting-alerts R1, R10, R20, R22).
@@ -101,6 +101,6 @@ Build order: core-rules → menubar-app → meeting-alerts.
 | User | Two Apple Development identities are in the keychain. Is the first one listed the right one, or will `NEXTUP_SIGN_IDENTITY` be set? |
 | User | While a meeting runs, should the bar keep showing the next event (assumed) or the running one? Notion's behaviour wasn't seen |
 | User | With several events on one day, is `Now` / `Upcoming in …` the grouping wanted? Notion's wasn't seen |
-| User | The reference row has a submenu whose content wasn't seen. NextUp puts `Join Google Meet` there. Would one click on the row be better? |
+| User | The Google Meet logo is Google's trademark. Before a public release: keep it, or swap it for a generic video symbol? |
 | User | If idle memory measures 30 MB or more: accept the number, or spec an optimisation pass? |
 | User | A right-to-left title may put the countdown before the title in the bar (not tested). Is a fix wanted? |

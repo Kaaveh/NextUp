@@ -74,7 +74,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R23. The menu is rebuilt in `menuNeedsUpdate` from the kept events and the current time. Opening it reads nothing from the calendar.
 - R24. `Agenda.sections`, in order: a header is `NSMenuItem.sectionHeader(title:)`; a row is an item with the row's text and its colour bar.
 - R25. Rows look enabled (the menu's `autoenablesItems` is `false`). A click on a row does nothing.
-- R26. A row with a `meetURL` has a submenu with one item, `Join Google Meet`, which opens the URL with `NSWorkspace.shared.open`.
+- R26. A row with a `meetURL` has a submenu with one item, `Join Google Meet`, which opens the URL with `NSWorkspace.shared.open`. When the menu's first row (the first row of the first section) has a `meetURL`, the same item also sits right under that row, as in the reference. Every `Join Google Meet` item shows the Google Meet logo at 16 × 16 pt, from `Contents/Resources/meet.png` (`Support/meet.png`, Google's 96 px product logo); a bundle without the file shows the item without an icon.
 - R27. With access and no sections: one disabled row, `No upcoming events`.
 - R28. Without access: the header `No calendar access` and the item `Open Privacy Settings…`, which opens `x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Calendars`. No event rows.
 - R29. The menu always ends with: a separator, `Launch at login`, a separator, `Quit NextUp` (key equivalent `q`).
@@ -105,6 +105,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   bar: Design sync · in 5 h 25 m
   menu: # Now
   menu: 12:00 PM · Standup > Join Google Meet
+  menu: Join Google Meet
   menu: # Upcoming in 5 h 25 m
   menu: 5:30 PM · Design sync > Join Google Meet
   menu: # Tomorrow
@@ -159,6 +160,7 @@ Sources/NextUp/AppDelegate.swift       status item, menu, refresh, timer and obs
 Sources/NextUp/CalendarSource.swift    EventKit: access, read, map to Event
 Sources/NextUp/SelfCheck.swift         sample events, fixed clock, the printed lines, the footprint
 Support/Info.plist
+Support/meet.png                       the Google Meet logo of R26, copied to Contents/Resources
 scripts/build-app.sh                   release build → build/NextUp.app, signed
 scripts/check.sh                       the gate
 scripts/install.sh                     for a person: a keychain identity, /Applications, open
