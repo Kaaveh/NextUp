@@ -164,6 +164,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(settings)
         }
         menu.addItem(.separator())
+        if alerts?.isOff == true {
+            let alertsOff = NSMenuItem(title: "Turn on meeting alerts…", action: #selector(openNotificationSettings), keyEquivalent: "")
+            alertsOff.target = self
+            menu.addItem(alertsOff)
+        }
         let login = NSMenuItem(title: "Launch at login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
         login.target = self
         // The self-check reads no ServiceManagement and draws it unchecked (menubar-app R33).
@@ -201,6 +206,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openPrivacySettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Calendars")!
         NSWorkspace.shared.open(url)
+    }
+
+    @objc private func openNotificationSettings() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension")!)
     }
 
     @objc private func join(_ sender: NSMenuItem) {

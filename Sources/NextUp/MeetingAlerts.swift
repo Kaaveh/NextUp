@@ -10,6 +10,8 @@ final class MeetingAlerts: NSObject, UNUserNotificationCenterDelegate {
     /// `false` until the first update and after `forget()`: the next update starts from scratch (R11).
     private var scheduled = false
     private var quitting = false
+    /// The authorization status read after the last refresh; `nil` until the first read (R16).
+    private var status: UNAuthorizationStatus?
     /// The scheduling of each update runs after the one before, so a removal can't overtake an older add.
     private var work: Task<Void, Never>?
 
@@ -53,7 +55,19 @@ final class MeetingAlerts: NSObject, UNUserNotificationCenterDelegate {
                     NSLog("NextUp: a meeting alert wasn't scheduled: %@", String(describing: error))
                 }
             }
+            // A request added without permission may have been dropped: a new status schedules from scratch (R16).
+            let status = await center.notificationSettings().authorizationStatus
+            if status != self.status {
+                self.status = status
+                forget()
+                update(plan, now: Date())
+            }
         }
+    }
+
+    /// The status is known and isn't `.authorized`: the menu offers `Turn on meeting alerts…` (R17).
+    var isOff: Bool {
+        status.map { $0 != .authorized } ?? false
     }
 
     /// Removes every pending request and waits until the removal has gone through (R14).
