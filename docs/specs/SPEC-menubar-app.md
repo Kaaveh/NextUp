@@ -1,6 +1,6 @@
 # Spec: menubar-app
 
-Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open; R36's new output (core-rules R37–R40) is specified and not built.
+Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open.
 
 ## Objective
 

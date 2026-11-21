@@ -1,6 +1,6 @@
 # Spec: core-rules
 
-Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built, except the running event in the bar and the `Ending in …` header (R37–R40), which are specified and not built.
+Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built.
 
 ## Objective
 
@@ -291,8 +291,3 @@ Manual QA: none.
 ## Open Questions
 
 None of its own. The product assumptions behind these rules are in the map.
-
-## Tasks (build order)
-
-- T1. The bar's event and the running header (R13's note, R18–R19, R22, R26–R27, R35, R37–R40): change `Agenda.bar` and `Agenda.sections`, keep their signatures, and make every row of R26, R27 and R40 a test (update the rows that change). The self-check's output changes with them, so in the same commit set the expected text in `scripts/check.sh` to menubar-app R36. Verify: `scripts/check.sh`.
-- T2. Implementing workflow (`docs/specs/README.md` «Workflow»): delete this Tasks section; set this spec's status line, the menubar-app status line and both README rows back to built (menubar-app with manual QA open). Verify: `scripts/check.sh`.
