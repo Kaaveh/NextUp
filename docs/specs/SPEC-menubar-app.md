@@ -66,7 +66,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R19. One `NSStatusItem` of variable length.
 - R20. With a result from `Agenda.bar`: the button's image is the colour bar, leading, and its title is the text.
 - R21. The colour bar is an image of 4 × 16 pt with a corner radius of 2 pt, filled with the event's colour, not a template. A menu row uses the same image.
-- R22. Without a bar text the button shows an SF Symbol as a template image, with an accessibility description and no title:
+- R22. Without a bar text the button shows an SF Symbol as a template image at `SymbolConfiguration(scale: .large)` (about 16 × 15 pt, Notion Calendar's size; the default 13 × 12 looked small next to it), with an accessibility description and no title:
   - `<day>.calendar` (today's day of the month in the calendar of R18, `21.calendar` on the 21st) when nothing more starts today (core-rules R35), described as `NextUp: nothing more today`; plain `calendar` where that symbol doesn't exist (it ships with macOS 26);
   - `calendar.badge.exclamationmark` when NextUp has no calendar access, described as `NextUp: no calendar access`.
 

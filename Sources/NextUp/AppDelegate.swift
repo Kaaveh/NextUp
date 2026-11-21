@@ -127,8 +127,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let (symbol, description) = events == nil
                 ? ("calendar.badge.exclamationmark", "NextUp: no calendar access")
                 : ("\(calendar.component(.day, from: now)).calendar", "NextUp: nothing more today")
-            let image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
-                ?? NSImage(systemSymbolName: "calendar", accessibilityDescription: description)
+            // `.large` draws about 16 × 15 pt, the size of Notion Calendar's icon; the default is 13 × 12.
+            let image = (NSImage(systemSymbolName: symbol, accessibilityDescription: description)
+                ?? NSImage(systemSymbolName: "calendar", accessibilityDescription: description))?
+                .withSymbolConfiguration(NSImage.SymbolConfiguration(scale: .large))
             image?.isTemplate = true
             button.image = image
             button.title = ""
