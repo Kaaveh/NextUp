@@ -43,6 +43,8 @@ final class MeetingAlerts: NSObject, UNUserNotificationCenterDelegate {
     func update(_ new: [Alert], now: Date) {
         for panel in panels { panel.update(now: now) }
         guard !quitting else { return }
+        // A timer past its date hasn't fired: a Timer runs late by a sleep, and a start from scratch would drop it.
+        for timer in timers.values where timer.fireDate <= now { timer.fire() }
         let fromScratch = !scheduled
         let changes = AlertPlan.changes(from: fromScratch ? [] : plan, to: new, now: now)
         plan = new
@@ -85,6 +87,8 @@ final class MeetingAlerts: NSObject, UNUserNotificationCenterDelegate {
     /// Removes every pending request and waits until the removal has gone through (R14).
     func removeAll() async {
         quitting = true
+        for timer in timers.values { timer.invalidate() }
+        timers = [:]
         await work?.value
         center.removeAllPendingNotificationRequests()
         _ = await center.pendingNotificationRequests()

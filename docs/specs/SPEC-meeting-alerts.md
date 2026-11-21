@@ -81,7 +81,7 @@ One minute before a meeting starts, macOS shows a notification with a Join butto
   | Friday 18:30:00 | `nil` |
 
   Its `timeRange` is `5:30 – 6:30 PM`; in `en_GB`, `17:30 – 18:30`.
-- R29. Timers: each alert in `add` gets a one-shot `Timer` at its `fireDate`, on the main run loop in `.common` mode, kept by `id` and replacing an older timer of that id. Each id in `remove` invalidates its timer. A start from scratch (R11, R12, R16) invalidates every timer first. Open panels are never closed by this. A meeting first seen less than a minute before it starts gets no panel (R13).
+- R29. Timers: each alert in `add` gets a one-shot `Timer` at its `fireDate`, on the main run loop in `.common` mode, kept by `id` and replacing an older timer of that id. Each id in `remove` invalidates its timer. A start from scratch (R11, R12, R16) invalidates every timer first. Open panels are never closed by this. A meeting first seen less than a minute before it starts gets no panel (R13). Each update first fires every timer past its `fireDate`, since a `Timer` runs late by a sleep and a start from scratch would drop it. Quitting (R14) invalidates every timer first.
 - R30. A firing timer opens the alert's panel, unless a panel with that `id` is open or `panelStatus` is already `nil` (a sleep past the meeting's end).
 - R31. Look, from the reference screenshot, the same in light and dark mode:
   - a borderless `NSPanel`, about 460 × 72 pt, with `NSAppearance(named: .darkAqua)`, a corner radius of 12 pt, the fill `#2C2C2C` and a 1 pt border `#3B3B3B`;
