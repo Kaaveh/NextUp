@@ -1,6 +1,6 @@
 import Foundation
 
-/// What the menu bar shows: the next event's text and its calendar's colour.
+/// What the menu bar shows: the bar event's text (core-rules R37) and its calendar's colour.
 public struct BarContent: Equatable, Sendable {
     public var text: String
     public var color: RGB
@@ -100,7 +100,7 @@ public enum Agenda {
         let next = next(in: events, now: now).flatMap { $0.start < today ? $0 : nil }
         let soon = next.flatMap { minutes(from: now, to: $0.start) <= 15 ? $0 : nil }
         let running = ordered(events).filter { $0.start <= now && now < $0.end }
-        let latest = running.first { $0.start == running.map(\.start).max() }
+        let latest = running.max { $0.start < $1.start }  // first of equal starts: R10's tie-break
         guard let event = soon ?? latest ?? next else { return nil }
         return BarContent(
             text: flag(event) + "\(shownTitle(event.title, limit: 30)) · \(countdown(from: now, to: event.start))",
@@ -128,7 +128,7 @@ public enum Agenda {
         ordered(events).first { $0.start > now }
     }
 
-    /// "in 5 h 25 m": whole minutes until `start`, rounded up (core-rules R12–R13).
+    /// "in 5 h 25 m": whole minutes until `start` (an event's start, or its end for R39), rounded up (core-rules R12–R13).
     static func countdown(from now: Date, to start: Date) -> String {
         let minutes = minutes(from: now, to: start)
         guard minutes > 0 else { return "now" }
