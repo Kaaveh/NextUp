@@ -118,15 +118,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func drawBar() {
         guard let button = statusItem.button else { return }
-        if let events, let bar = Agenda.bar(for: events, now: now) {
+        if let events, let bar = Agenda.bar(for: events, now: now, calendar: calendar) {
             button.image = Self.colorBar(bar.color, striped: bar.declinedByGuest)
             button.imagePosition = .imageLeading
             button.title = bar.text
         } else {
+            // Today's date, as Notion Calendar shows it; `N.calendar` ships with macOS 26 (menubar-app R22).
             let (symbol, description) = events == nil
                 ? ("calendar.badge.exclamationmark", "NextUp: no calendar access")
-                : ("calendar", "NextUp: no upcoming events")
+                : ("\(calendar.component(.day, from: now)).calendar", "NextUp: nothing more today")
             let image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
+                ?? NSImage(systemSymbolName: "calendar", accessibilityDescription: description)
             image?.isTemplate = true
             button.image = image
             button.title = ""

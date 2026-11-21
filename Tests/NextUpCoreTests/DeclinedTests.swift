@@ -14,7 +14,7 @@ import Testing
         let events = [Event(title: title, start: at(2026, 11, 20, 17, 30), end: at(2026, 11, 20, 18, 30),
                             color: gray, meetURL: meet, declinedByGuest: declined)]
         let now = at(2026, 11, 20, 12, 5, 13)
-        #expect(Agenda.bar(for: events, now: now) == BarContent(text: bar, color: gray, declinedByGuest: declined))
+        #expect(Agenda.bar(for: events, now: now, calendar: tehran) == BarContent(text: bar, color: gray, declinedByGuest: declined))
         #expect(Agenda.sections(for: events, now: now, calendar: tehran, locale: enUS).first?.rows
             == [MenuRow(text: row, color: gray, meetURL: meet, declinedByGuest: declined)])
     }
