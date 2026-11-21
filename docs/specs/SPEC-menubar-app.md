@@ -67,7 +67,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R20. With a result from `Agenda.bar`: the button's image is the colour bar, leading, and its title is the text.
 - R21. The colour bar is an image of 4 × 16 pt with a corner radius of 2 pt, filled with the event's colour, not a template. A menu row uses the same image.
 - R22. Without a bar text the button shows an SF Symbol as a template image, with an accessibility description and no title:
-  - `calendar` when nothing is coming, described as `NextUp: no upcoming events`;
+  - `<day>.calendar` (today's day of the month in the calendar of R18, `21.calendar` on the 21st) when nothing more starts today (core-rules R35), described as `NextUp: nothing more today`; plain `calendar` where that symbol doesn't exist (it ships with macOS 26);
   - `calendar.badge.exclamationmark` when NextUp has no calendar access, described as `NextUp: no calendar access`.
 
 **Menu**
@@ -236,6 +236,7 @@ Manual QA (the user, on the installed app; stays open after the build). Run `scr
 - [ ] An event a guest declined shows the striped bar and `⚠` in the bar and in its menu row. (Whether the Google CalDAV feed gives EventKit the guests' statuses is checked here.)
 - [ ] An event added, moved or deleted in Calendar shows in the bar within a minute.
 - [ ] After sleep, and after midnight, the bar and the headers are right.
+- [ ] With nothing more today, the bar shows only today's date icon and the menu still lists `Tomorrow`; after midnight the bar shows the day's first event again.
 - [ ] With calendar access switched off in System Settings, the bar shows the badge icon and the menu offers `Open Privacy Settings…`, which lands on Privacy & Security → Calendars. Switched back on, the events return within a minute, without a relaunch.
 - [ ] `Launch at login`: ticking it adds NextUp to System Settings → General → Login Items, and NextUp is running after the next login. Unticking removes it.
 - [ ] A second `scripts/install.sh`, after a code change, doesn't make macOS ask for calendar access again.
