@@ -1,10 +1,10 @@
 # Spec: meeting-alerts
 
-Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open.
+Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open; the panel (R25–R35) is specified and not built.
 
 ## Objective
 
-One minute before a meeting starts, macOS shows a notification with a Join button. A meeting is an event with a Google Meet link. Join, or a click on the notification, opens the link in the browser. What to announce is decided by a pure function; the shell only keeps macOS's pending notifications equal to that plan.
+One minute before a meeting starts, macOS shows a notification with a Join button. A meeting is an event with a Google Meet link. Join, or a click on the notification, opens the link in the browser. At the same moment NextUp opens its own panel at the top right, copied from Notion Calendar's: the title, a red `in 1 m · 5:30 – 6:30 PM`, and `Join Google Meet`. It stays until Join, Dismiss or the meeting's end. What to announce is decided by a pure function; the shell only keeps macOS's pending notifications and the panel timers equal to that plan.
 
 ### Requirements
 
@@ -18,7 +18,7 @@ One minute before a meeting starts, macOS shows a notification with a Join butto
   - `url`: the event's `meetURL`.
 - R3. Events that give the same `id` (one meeting in two calendars) give one alert, from the first of them in core-rules R10 order. The same link at two start times gives two alerts.
 - R4. The result is sorted by `fireDate`, then `id`.
-- R5. An alert stays in the plan until its meeting starts, not until it fires. The plan therefore doesn't change in the second the notification is due.
+- R5. An alert stays in the plan until its meeting starts, not until it fires. The plan therefore doesn't change in the second the notification is due. An open panel keeps its own copy of the alert until the meeting ends (R27).
 - R6. `AlertPlan.changes(from:to:now:)` compares the last scheduled plan with a new one:
   - `remove`: the ids that left the plan;
   - `add`: the alerts that are new, or differ from the last plan's, and whose `fireDate > now`.
@@ -66,6 +66,36 @@ One minute before a meeting starts, macOS shows a notification with a Join butto
 - R23. `--self-check` calls no UserNotifications API: `UNUserNotificationCenter.current()` needs the app bundle and could raise a prompt. Its expected output doesn't change.
 - R24. `scripts/check.sh` also checks the key of R22.
 
+**Panel** (NextUp's own window beside the notification, as in Notion Calendar)
+- R25. Every alert also opens a panel at its `fireDate`, from the same plan and the same `changes` (R6) as the notification. The notification stays as it is (R8–R22).
+- R26. `Alert` gains `start`, `end` and `timeRange`. `timeRange` is the start and end as one range from `DateIntervalFormatter` with the template `jm`, in `locale` and the calendar's time zone: `5:30 – 6:30 PM` in `en_US` (U+2009 on both sides of the en dash, U+202F before `PM`), `17:30 – 18:30` in `en_GB`.
+- R27. `AlertPlan.panelStatus(for:now:) -> String?` is the countdown to `start` (core-rules R12–R13) before the start, `now` from `start` until `end`, and `nil` from `end` on, when the panel closes.
+- R28. Cases on `Design sync` (Friday 17:30 to 18:30) of R7, locale `en_US`:
+
+  | Now | `panelStatus` |
+  |---|---|
+  | Friday 17:29:00 (the fire date) | `in 1 m` |
+  | Friday 17:29:59 | `in 1 m` |
+  | Friday 17:30:00 | `now` |
+  | Friday 18:29:59 | `now` |
+  | Friday 18:30:00 | `nil` |
+
+  Its `timeRange` is `5:30 – 6:30 PM`; in `en_GB`, `17:30 – 18:30`.
+- R29. Timers: each alert in `add` gets a one-shot `Timer` at its `fireDate`, on the main run loop in `.common` mode, kept by `id` and replacing an older timer of that id. Each id in `remove` invalidates its timer. A start from scratch (R11, R12, R16) invalidates every timer first. Open panels are never closed by this. A meeting first seen less than a minute before it starts gets no panel (R13).
+- R30. A firing timer opens the alert's panel, unless a panel with that `id` is open.
+- R31. Look, from the reference screenshot, the same in light and dark mode:
+  - a borderless `NSPanel`, about 460 × 72 pt, with `NSAppearance(named: .darkAqua)`, a corner radius of 12 pt, the fill `#2C2C2C` and a 1 pt border `#3B3B3B`;
+  - on the left, 16 pt in, two lines: the title (13 pt medium, label colour, one line, cut at the tail); below it the status (R27) in `systemRed`, then ` · ` and the `timeRange` in the secondary label colour, both 12 pt;
+  - on the right, 12 pt in and centred vertically: a 28 pt tall button with the fill `#373737` and a 6 pt corner radius holding the Google Meet logo (16 pt, the image of menubar-app R26) and `Join Google Meet` (13 pt), joined to a 28 × 28 pt `chevron.down` part by a 1 pt divider. The chevron opens a menu with `Dismiss` and `Copy link`.
+- R32. Place: the top right of the screen with the menu bar (`NSScreen.screens.first`), 8 pt below the top of its `visibleFrame` and 8 pt in from its right edge. Another open panel goes 8 pt below the lowest one; when one closes, the ones below move up. The panel sits at the `.statusBar` level, shows on every Space and over full-screen apps (`.canJoinAllSpaces`, `.fullScreenAuxiliary`), stays when NextUp isn't active (`hidesOnDeactivate = false`), and never takes focus from the app being typed in (`.nonactivatingPanel`): a click on its buttons works without activating NextUp.
+- R33. Each refresh passes `now` on: an open panel redraws its status, and closes when `panelStatus` is `nil`. The status is at most a minute stale, which the minute tick (menubar-app R16) keeps true at whole-minute starts.
+- R34. Actions:
+  - `Join Google Meet` opens the link with R20's check and closes the panel;
+  - `Dismiss` closes it;
+  - `Copy link` puts the link on the general pasteboard as a string, and the panel stays;
+  - `Join` or a click on the notification (R20) also closes the open panel with the same `id`.
+- R35. The panel plays no sound (the notification does, R10), needs no permission, and shows with notifications off or a Focus on. It exists only in normal mode: `MeetingAlerts` owns the timers and panels, the self-check never creates it (R23), and its output doesn't change.
+
 ## Interface
 
 Consumed: `Event`, the order, the shown title and the start time of `core-rules` (R10, R15–R16, R25); `refresh()`, the kept events and the menu's last block of `menubar-app` (R15, R29).
@@ -79,11 +109,15 @@ public struct Alert: Equatable, Sendable {
     public var title: String
     public var body: String
     public var url: URL
+    public var start: Date
+    public var end: Date
+    public var timeRange: String          // "5:30 – 6:30 PM" (R26)
 }
 
 public enum AlertPlan {
     public static func alerts(for events: [Event], now: Date, calendar: Calendar, locale: Locale) -> [Alert]
     public static func changes(from last: [Alert], to plan: [Alert], now: Date) -> (remove: [String], add: [Alert])
+    public static func panelStatus(for alert: Alert, now: Date) -> String?      // "in 1 m", "now", nil (R27)
 }
 ```
 
@@ -92,7 +126,8 @@ public enum AlertPlan {
 ```
 Sources/NextUpCore/AlertPlan.swift              Alert, the plan, the changes
 Tests/NextUpCoreTests/AlertPlanTests.swift
-Sources/NextUp/MeetingAlerts.swift              the delegate, the category, permission, scheduling, quit
+Sources/NextUp/MeetingAlerts.swift              the delegate, the category, permission, scheduling, quit, the panel timers
+Sources/NextUp/MeetingPanel.swift               the panel window, its layout, its actions and the stacking
 Sources/NextUp/AppDelegate.swift                calls it after refresh; the alerts-off item
 Support/Info.plist, scripts/check.sh            the alert style key and its check
 ```
@@ -108,19 +143,20 @@ Checks (the gate, unattended): `scripts/check.sh`
 
 ## Testing Strategy
 
-- `AlertPlanTests`: every row of R7, with the fixed calendar and locale of core-rules.
-- The scheduling itself has no automated test: it needs the notification permission. It is the manual QA list below.
+- `AlertPlanTests`: every row of R7 and R28, with the fixed calendar and locale of core-rules.
+- The scheduling and the panel have no automated test: one needs the notification permission, the other a person looking at the screen. They are the manual QA list below.
 - The self-check must keep passing unchanged, which shows the notification code stays out of its path.
 
 ## Boundaries
 
 - Always: decide what to schedule in `AlertPlan`; keep the shell to applying `changes`; run `scripts/check.sh` before each commit.
-- Ask first (in an unattended run, stop and report it): an entitlement (time-sensitive alerts need one); a second kind of notification; a lead time other than one minute.
+- Ask first (in an unattended run, stop and report it): an entitlement (time-sensitive alerts need one); a third kind of alert beside the notification and the panel; a lead time other than one minute.
 - Never:
   - call any UserNotifications API in `--self-check`, in a test or in a script;
   - start NextUp without `--self-check` in an automated session;
   - post a notification to try it out;
-  - open a URL from a notification without the check of R20;
+  - open a URL from a notification or the panel without the check of R20;
+  - open a panel to try it out, from a test, a script or the self-check;
   - log event titles or links.
 
 ## Success Criteria
@@ -136,8 +172,20 @@ Manual QA (the user, on the installed app; stays open after the build):
 - [ ] Moving the test event 10 minutes later gives one notification, at the new time. Deleting it gives none. An event without a link gives none.
 - [ ] After `Quit NextUp`, no notification arrives for a meeting that was already planned.
 - [ ] With NextUp's notifications switched off in System Settings, the menu shows `Turn on meeting alerts…` within a minute, and it opens the Notifications pane. Switched back on, the next test meeting gets its notification.
+- [ ] One minute before a test meeting, the panel opens at the top right beside the notification: the title, a red `in 1 m · <range>`, `Join Google Meet`. It stays on screen.
+- [ ] At the start time it reads `now`; at the meeting's end it closes by itself.
+- [ ] `Join Google Meet` opens the meeting and closes the panel. `˅` → `Dismiss` closes it. `˅` → `Copy link` copies the link and leaves it open. Join on the notification closes the panel too.
+- [ ] Two meetings at the same time give two stacked panels; closing the top one moves the other up.
+- [ ] The panel shows over a full-screen app and on another Space, and typing in another app isn't interrupted.
+- [ ] Beside Notion Calendar's panel, the size, colours and text match; note any gap to tune.
 - [ ] A working day with Notion Calendar quit: nothing was missed.
 
 ## Open Questions
 
-None of its own. A Focus mode silences the alert unless NextUp is on its allowed list; breaking through needs an entitlement and is out of scope (see the map).
+None of its own. A Focus mode silences the notification unless NextUp is on its allowed list; breaking through needs an entitlement and is out of scope (see the map). The panel shows whatever the Focus (R35).
+
+## Tasks (build order)
+
+- T1. `Alert`'s `start`, `end` and `timeRange`, and `AlertPlan.panelStatus` (R26–R28), with every row of R28 as a test; update the tests that build an `Alert` by hand. Verify: `scripts/check.sh`.
+- T2. `MeetingPanel.swift` and the panel timers in `MeetingAlerts` (R25, R29–R35): open at the fire date, stack, redraw and close on refresh, the three actions, closing from the notification's Join. Read the self-check's path from `main.swift` to exit and confirm it reaches none of this code. Verify: `scripts/check.sh`, with the self-check's output unchanged.
+- T3. Implementing workflow (`docs/specs/README.md` «Workflow»): delete this Tasks section; set the status line and the README row back to built with manual QA open; keep the manual QA list unticked. Verify: `scripts/check.sh`.

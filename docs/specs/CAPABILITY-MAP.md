@@ -6,7 +6,7 @@ NextUp is a macOS menu bar app for one person on their own Mac. The bar shows th
 |---|---|---|---|
 | `core-rules` | [SPEC-core-rules.md](SPEC-core-rules.md) | The Swift package and `NextUpCore`, the pure rules: the Meet link in an event's notes, which event is next, the countdown, the bar's text, the menu's sections and rows. Also the repo's `CLAUDE.md`, `README.md` and `.gitignore` | — |
 | `menubar-app` | [SPEC-menubar-app.md](SPEC-menubar-app.md) | The AppKit agent app: reading the macOS calendar store, the bar, the menu, Join from the menu, the no-access state, refresh, Launch at login, Quit. Also the bundle, check and install scripts, the self-check and the first memory number | `core-rules` |
-| `meeting-alerts` | [SPEC-meeting-alerts.md](SPEC-meeting-alerts.md) | The notification one minute before a meeting, with Join: the pure alert plan, keeping macOS's pending notifications equal to it, the alerts-off item | `menubar-app` |
+| `meeting-alerts` | [SPEC-meeting-alerts.md](SPEC-meeting-alerts.md) | The notification one minute before a meeting, with Join, and NextUp's own Notion-style panel beside it: the pure alert plan, keeping macOS's pending notifications and the panel timers equal to it, the alerts-off item | `menubar-app` |
 
 Build order: core-rules → menubar-app → meeting-alerts.
 
@@ -25,7 +25,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 - Public release: notarization, the hardened runtime, the sandbox, an updater, CI, an app icon.
 - Localization (the UI is English) and special handling of right-to-left titles.
 - Choosing calendars; merging one event that sits in two calendars.
-- Alerts for events without a Meet link; snooze; a lead time other than one minute; breaking through a Focus mode (it needs an entitlement a local build can't carry).
+- Alerts for events without a Meet link; snooze; a lead time other than one minute; letting the macOS notification break through a Focus mode (it needs an entitlement a local build can't carry). NextUp's own panel is a window, so it shows whatever the Focus.
 - SwiftUI, storyboards, third-party packages.
 
 ## Verified on the target Mac (2026-11-20)
@@ -83,11 +83,11 @@ Build order: core-rules → menubar-app → meeting-alerts.
 1. The bundle id is `ir.kaavehdev.nextup`. Confirm it before the first install.
 2. The app is installed at `/Applications/NextUp.app` (menubar-app R39).
 3. The install signs with the first Apple Development identity in the keychain, unless `NEXTUP_SIGN_IDENTITY` names another (menubar-app R39).
-4. The bar shows the next event that hasn't started. A running event shows only in the menu (core-rules R11).
+4. The bar shows the running event, as `<title> · now`, until the next event is 15 minutes away; otherwise the next event today (core-rules R37). Picked by the user from Notion Calendar's behaviour.
 5. Join sits in the meeting row's submenu, and the menu's first row also has it right under the row, with the Google Meet logo, as in the reference. A click on a row itself does nothing (menubar-app R25–R26).
-6. The menu's sections are `Now`, `Upcoming in …` for later today, `Tomorrow`, and the day after by date. Ended events aren't listed (core-rules R22–R23).
+6. The menu's sections are `Ending in …` for what is running, `Upcoming in …` for later today, `Tomorrow`, and the day after by date. Ended events aren't listed (core-rules R22–R23).
 7. All-day, cancelled and declined events are skipped (menubar-app R13).
-8. Only an event with a Meet link gets a notification. It plays the default sound, a click on its body joins too, and it asks macOS for the style that stays on screen (meeting-alerts R1, R10, R20, R22).
+8. Only an event with a Meet link gets a notification. It plays the default sound, a click on its body joins too, and it asks macOS for the style that stays on screen (meeting-alerts R1, R10, R20, R22). Beside it NextUp opens its own Notion-style panel with Join, which stays until Join, Dismiss or the meeting's end (meeting-alerts R25–R35).
 9. A meeting first seen less than a minute before it starts gets no notification. Quitting NextUp cancels its pending ones (meeting-alerts R13–R14).
 10. With nothing coming, the bar is a calendar icon. Without calendar access it is the icon with an exclamation badge, and the menu offers System Settings (menubar-app R22, R28).
 11. Titles are cut at 30 characters in the bar and at 50 in a menu row (core-rules R16).
@@ -100,8 +100,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 | Owner | Item |
 |---|---|
 | User | Two Apple Development identities are in the keychain. Is the first one listed the right one, or will `NEXTUP_SIGN_IDENTITY` be set? |
-| User | While a meeting runs, should the bar keep showing the next event (assumed) or the running one? Notion's behaviour wasn't seen |
-| User | With several events on one day, is `Now` / `Upcoming in …` the grouping wanted? Notion's wasn't seen |
+| User | With several events on one day, is `Ending in …` / `Upcoming in …` the grouping wanted? Notion's wasn't seen |
 | User | The Google Meet logo is Google's trademark. Before a public release: keep it, or swap it for a generic video symbol? |
 | User | If idle memory measures 30 MB or more: accept the number, or spec an optimisation pass? |
 | User | A right-to-left title may put the countdown before the title in the bar (not tested). Is a fix wanted? |

@@ -1,6 +1,6 @@
 # Spec: menubar-app
 
-Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open.
+Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open; R36's new output (core-rules R37–R40) is specified and not built.
 
 ## Objective
 
@@ -102,8 +102,8 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R36. Expected output:
 
   ```
-  bar: Design sync · in 5 h 25 m
-  menu: # Now
+  bar: Standup · now
+  menu: # Ending in 25 m
   menu: 12:00 PM · Standup > Join Google Meet
   menu: Join Google Meet
   menu: # Upcoming in 5 h 25 m
@@ -231,11 +231,12 @@ Manual QA (the user, on the installed app; stays open after the build). Run `scr
 - [ ] `scripts/install.sh` signs with an Apple Development identity. Note whether `codesign` raised a keychain dialog, and whether Always Allow silenced it for the next install.
 - [ ] First launch: macOS asks for calendar access once. After Allow, the bar shows the next event with its calendar's colour, and the countdown steps down every minute.
 - [ ] The bar and the menu look like the reference: colour bar, gap, text; grey headers; rows with their bars; a chevron on meetings.
-- [ ] The menu lists what is running under `Now`, later today under `Upcoming in …`, then `Tomorrow` and the day after. Ended, all-day, cancelled and declined events don't appear.
+- [ ] The menu lists what is running under `Ending in …`, later today under `Upcoming in …`, then `Tomorrow` and the day after. Ended, all-day, cancelled and declined events don't appear.
 - [ ] `Join Google Meet` opens the right meeting in the browser.
 - [ ] An event a guest declined shows the striped bar and `⚠` in the bar and in its menu row. (Whether the Google CalDAV feed gives EventKit the guests' statuses is checked here.)
 - [ ] An event added, moved or deleted in Calendar shows in the bar within a minute.
 - [ ] After sleep, and after midnight, the bar and the headers are right.
+- [ ] While a meeting runs, the bar shows `<title> · now` and the menu's first header is `Ending in …`; 15 minutes before the next event the bar switches to its countdown; a running meeting that is the day's last stays in the bar until it ends.
 - [ ] With nothing more today, the bar shows only today's date icon and the menu still lists `Tomorrow`; after midnight the bar shows the day's first event again.
 - [ ] With calendar access switched off in System Settings, the bar shows the badge icon and the menu offers `Open Privacy Settings…`, which lands on Privacy & Security → Calendars. Switched back on, the events return within a minute, without a relaunch.
 - [ ] `Launch at login`: ticking it adds NextUp to System Settings → General → Login Items, and NextUp is running after the next login. Unticking removes it.

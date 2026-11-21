@@ -1,6 +1,6 @@
 # Spec: core-rules
 
-Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built.
+Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built, except the running event in the bar and the `Ending in …` header (R37–R40), which are specified and not built.
 
 ## Objective
 
@@ -41,7 +41,7 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
 
   | Minutes | Text | Examples |
   |---|---|---|
-  | 0 or less | `now` (the bar never asks: the next event has `start > now`) | |
+  | 0 or less | `now` (a running event in the bar, R38) | |
   | 1 to 59 | `in <m> m` | `in 25 m` |
   | 60 to 1439 | `in <h> h <m> m`; `in <h> h` when the minutes are 0 | `in 5 h 25 m`, `in 5 h` |
   | 1440 and more | `in <d> d <h> h`, minutes dropped; `in <d> d` when the hours are 0 | `in 1 d 3 h`, `in 2 d` |
@@ -72,8 +72,8 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
   | `Quarterly roadmap review, pt 2` (30 characters) | 30 | unchanged |
 
 **Bar**
-- R18. `Agenda.bar(for:now:calendar:)` returns, for the next event (R11) when it starts today (R35), the text `<shown title, limit 30> · <countdown>` and the event's colour. The separator is a space, U+00B7 and a space. Example: `Design sync · in 5 h 25 m`.
-- R19. With no next event today it returns `nil`.
+- R18. `Agenda.bar(for:now:calendar:)` returns, for the bar's event (R37), the text `<shown title, limit 30> · <countdown>` and the event's colour. The separator is a space, U+00B7 and a space. Example: `Design sync · in 5 h 25 m`.
+- R19. With no bar event (R37) it returns `nil`.
 
 **Window**
 - R20. `Agenda.window(now:calendar:)` runs from `now` to 00:00 of the third day after today in `calendar`: today plus the next 2 days. Example: Friday 2026-11-20 12:05:13 gives an end of Monday 2026-11-23 00:00:00.
@@ -84,7 +84,7 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
 
   | Header | Events |
   |---|---|
-  | `Now` | running: `start <= now` and `now < end` |
+  | `Ending in ` and the countdown to the earliest `end` of its events (R39), as `Ending in 25 m` | running: `start <= now` and `now < end` |
   | `Upcoming ` and the countdown to the section's first event, as `Upcoming in 5 h 25 m` | starting later today |
   | `Tomorrow` | starting tomorrow |
   | the day after tomorrow as `EEE MMM d`, as `Sun Nov 22` | starting that day |
@@ -107,17 +107,17 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
 
   | Header | Rows |
   |---|---|
-  | `Now` | `12:00 PM · Standup` |
+  | `Ending in 25 m` | `12:00 PM · Standup` |
   | `Upcoming in 5 h 25 m` | `5:30 PM · Design sync` |
   | `Tomorrow` | `12:00 PM · Lunch` |
   | `Sun Nov 22` | `9:30 AM · Planning` |
 
-  `Breakfast` has ended and `Retro` is past the window. The bar for the same input is `Design sync · in 5 h 25 m`.
+  `Breakfast` has ended and `Retro` is past the window. The bar for the same input is `Standup · now`: it is running and `Design sync` is more than 15 minutes away (R37).
 - R27. More cases on the same events:
 
   | Now | Section headers | Bar |
   |---|---|---|
-  | Friday 17:30:00 | `Now` (with `Design sync`), `Tomorrow`, `Sun Nov 22` | `nil` (`Lunch` is tomorrow, R35) |
+  | Friday 17:30:00 | `Ending in 1 h` (with `Design sync`), `Tomorrow`, `Sun Nov 22` | `Design sync · now` (R37) |
   | Friday 19:00:00 | `Tomorrow`, `Sun Nov 22` | `nil` |
   | Sunday 23:00:00, without `Retro` | none | `nil` |
 
@@ -146,8 +146,26 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
   | `Quarterly roadmap review with the whole team` | `true` | `⚠ Quarterly roadmap review with… · in 5 h 25 m` | `⚠ 5:30 PM · Quarterly roadmap review with the whole team` |
 
 **Nothing left today**
-- R35. The bar shows only an event that starts before 00:00 of tomorrow in `calendar` (R21's day arithmetic); a later next event gives `nil`, so the shell can shrink to today's date, as Notion Calendar does. The menu is unchanged.
+- R35. The bar shows a next event (one that hasn't started) only when it starts before 00:00 of tomorrow in `calendar` (R21's day arithmetic); a later next event gives `nil`, so the shell can shrink to today's date, as Notion Calendar does. The menu is unchanged.
 - R36. Cases, now Friday 2026-11-20 12:05:13: an event at Friday 23:59 gives `<title> · in 11 h 54 m`; one at Saturday 00:00 gives `nil`.
+
+**Running event** (as Notion Calendar shows a meeting in progress)
+- R37. The bar's event is the first of these that exists:
+  1. the next event (R11), when it starts today (R35) and its countdown (R12) is 15 minutes or less;
+  2. the running event (`start <= now < end`) with the latest `start`, ties broken by R10's order;
+  3. the next event, when it starts today (R35).
+- R38. A running event's bar text is `<shown title, limit 30> · now`, with its colour, `declinedByGuest` and `⚠ ` (R32). It shows even when the next event is tomorrow: R35 limits only a next event.
+- R39. The running section's header is `Ending in ` and the countdown (R12–R13) from `now` to the earliest `end` among its events: Standup (ends 12:30) at 12:05:13 gives `Ending in 25 m`.
+- R40. Cases on the events of R26 plus `Workshop`, Friday 16:00 to 18:00, no link, and `Focus`, Friday 16:00 to 17:00, no link:
+
+  | Now | Bar | First header |
+  |---|---|---|
+  | Friday 16:30:00 | `Focus · now` (two starts at 16:00, title order) | `Ending in 30 m` |
+  | Friday 17:14:59 | `Workshop · now` (`Design sync` is 16 minutes away) | `Ending in 46 m` |
+  | Friday 17:15:00 | `Design sync · in 15 m` | `Ending in 45 m` |
+  | Friday 17:30:00 | `Design sync · now` (it started after `Workshop`) | `Ending in 30 m` |
+  | Friday 18:00:00 | `Design sync · now` | `Ending in 30 m` |
+  | Friday 18:30:00 | `nil` (nothing runs, `Lunch` is tomorrow) | `Tomorrow` |
 
 ## Interface (provided)
 
@@ -181,7 +199,7 @@ public struct MenuRow: Equatable, Sendable {
 }
 
 public struct MenuSection: Equatable, Sendable {
-    public var header: String                           // "Now", "Upcoming in 5 h 25 m", "Tomorrow", "Sun Nov 22"
+    public var header: String                           // "Ending in 25 m", "Upcoming in 5 h 25 m", "Tomorrow", "Sun Nov 22"
     public var rows: [MenuRow]
 }
 
@@ -273,3 +291,8 @@ Manual QA: none.
 ## Open Questions
 
 None of its own. The product assumptions behind these rules are in the map.
+
+## Tasks (build order)
+
+- T1. The bar's event and the running header (R13's note, R18–R19, R22, R26–R27, R35, R37–R40): change `Agenda.bar` and `Agenda.sections`, keep their signatures, and make every row of R26, R27 and R40 a test (update the rows that change). The self-check's output changes with them, so in the same commit set the expected text in `scripts/check.sh` to menubar-app R36. Verify: `scripts/check.sh`.
+- T2. Implementing workflow (`docs/specs/README.md` «Workflow»): delete this Tasks section; set this spec's status line, the menubar-app status line and both README rows back to built (menubar-app with manual QA open). Verify: `scripts/check.sh`.
