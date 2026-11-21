@@ -94,9 +94,10 @@ public enum Agenda {
         calendar.startOfDay(for: calendar.date(byAdding: .day, value: n, to: now)!)
     }
 
-    /// "Design sync · in 5 h 25 m" for the next event, `nil` when none is coming (core-rules R18–R19).
-    public static func bar(for events: [Event], now: Date) -> BarContent? {
-        guard let event = next(in: events, now: now) else { return nil }
+    /// "Design sync · in 5 h 25 m" for the next event, `nil` when none starts today (core-rules R18–R19, R35).
+    public static func bar(for events: [Event], now: Date, calendar: Calendar) -> BarContent? {
+        guard let event = next(in: events, now: now),
+              event.start < day(after: 1, from: now, calendar: calendar) else { return nil }
         return BarContent(
             text: flag(event) + "\(shownTitle(event.title, limit: 30)) · \(countdown(from: now, to: event.start))",
             color: event.color,

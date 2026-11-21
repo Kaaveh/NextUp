@@ -27,7 +27,7 @@ import Testing
             ["Tomorrow", "12:00\u{202F}PM · Lunch"],
             ["Sun Nov 22", "9:30\u{202F}AM · Planning"],
         ])
-        #expect(Agenda.bar(for: Self.events, now: now)?.text == "Design sync · in 5 h 25 m")
+        #expect(Agenda.bar(for: Self.events, now: now, calendar: tehran)?.text == "Design sync · in 5 h 25 m")
     }
 
     // core-rules R24: a row carries its event's colour and Meet link
@@ -49,13 +49,13 @@ import Testing
 
     // core-rules R27
     @Test(arguments: [
-        (at(2026, 11, 20, 17, 30), true, [["Now", "5:30\u{202F}PM · Design sync"], ["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], "Lunch · in 18 h 30 m" as String?),
-        (at(2026, 11, 20, 19), true, [["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], "Lunch · in 17 h"),
+        (at(2026, 11, 20, 17, 30), true, [["Now", "5:30\u{202F}PM · Design sync"], ["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], nil as String?),
+        (at(2026, 11, 20, 19), true, [["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], nil),
         (at(2026, 11, 22, 23), false, [], nil),
     ])
     func moreCases(now: Date, withRetro: Bool, expected: [[String]], bar: String?) {
         let events = withRetro ? Self.events : Self.events.filter { $0.title != "Retro" }
         #expect(lines(events, now) == expected)
-        #expect(Agenda.bar(for: events, now: now)?.text == bar)
+        #expect(Agenda.bar(for: events, now: now, calendar: tehran)?.text == bar)
     }
 }

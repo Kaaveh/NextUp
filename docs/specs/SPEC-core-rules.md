@@ -72,8 +72,8 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
   | `Quarterly roadmap review, pt 2` (30 characters) | 30 | unchanged |
 
 **Bar**
-- R18. `Agenda.bar(for:now:)` returns, for the next event (R11), the text `<shown title, limit 30> · <countdown>` and the event's colour. The separator is a space, U+00B7 and a space. Example: `Design sync · in 5 h 25 m`.
-- R19. With no next event it returns `nil`.
+- R18. `Agenda.bar(for:now:calendar:)` returns, for the next event (R11) when it starts today (R35), the text `<shown title, limit 30> · <countdown>` and the event's colour. The separator is a space, U+00B7 and a space. Example: `Design sync · in 5 h 25 m`.
+- R19. With no next event today it returns `nil`.
 
 **Window**
 - R20. `Agenda.window(now:calendar:)` runs from `now` to 00:00 of the third day after today in `calendar`: today plus the next 2 days. Example: Friday 2026-11-20 12:05:13 gives an end of Monday 2026-11-23 00:00:00.
@@ -117,8 +117,8 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
 
   | Now | Section headers | Bar |
   |---|---|---|
-  | Friday 17:30:00 | `Now` (with `Design sync`), `Tomorrow`, `Sun Nov 22` | `Lunch · in 18 h 30 m` |
-  | Friday 19:00:00 | `Tomorrow`, `Sun Nov 22` | `Lunch · in 17 h` |
+  | Friday 17:30:00 | `Now` (with `Design sync`), `Tomorrow`, `Sun Nov 22` | `nil` (`Lunch` is tomorrow, R35) |
+  | Friday 19:00:00 | `Tomorrow`, `Sun Nov 22` | `nil` |
   | Sunday 23:00:00, without `Retro` | none | `nil` |
 
 **Repo files**
@@ -144,6 +144,10 @@ Every rule NextUp shows or acts on in the bar and the menu is a pure function in
   | `Design sync` | `false` | `Design sync · in 5 h 25 m` | `5:30 PM · Design sync` |
   | `Design sync` | `true` | `⚠ Design sync · in 5 h 25 m` | `⚠ 5:30 PM · Design sync` |
   | `Quarterly roadmap review with the whole team` | `true` | `⚠ Quarterly roadmap review with… · in 5 h 25 m` | `⚠ 5:30 PM · Quarterly roadmap review with the whole team` |
+
+**Nothing left today**
+- R35. The bar shows only an event that starts before 00:00 of tomorrow in `calendar` (R21's day arithmetic); a later next event gives `nil`, so the shell can shrink to today's date, as Notion Calendar does. The menu is unchanged.
+- R36. Cases, now Friday 2026-11-20 12:05:13: an event at Friday 23:59 gives `<title> · in 11 h 54 m`; one at Saturday 00:00 gives `nil`.
 
 ## Interface (provided)
 
@@ -187,7 +191,7 @@ public enum MeetLink {
 
 public enum Agenda {
     public static func window(now: Date, calendar: Calendar) -> DateInterval
-    public static func bar(for events: [Event], now: Date) -> BarContent?
+    public static func bar(for events: [Event], now: Date, calendar: Calendar) -> BarContent?
     public static func sections(for events: [Event], now: Date, calendar: Calendar, locale: Locale) -> [MenuSection]
 }
 ```

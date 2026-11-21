@@ -66,9 +66,9 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
 - R19. One `NSStatusItem` of variable length.
 - R20. With a result from `Agenda.bar`: the button's image is the colour bar, leading, and its title is the text.
 - R21. The colour bar is an image of 4 × 16 pt with a corner radius of 2 pt, filled with the event's colour, not a template. A menu row uses the same image.
-- R22. Without a bar text the button shows an SF Symbol as a template image, with an accessibility description and no title:
-  - `calendar` when nothing is coming, described as `NextUp: no upcoming events`;
-  - `calendar.badge.exclamationmark` when NextUp has no calendar access, described as `NextUp: no calendar access`.
+- R22. Without a bar text the button shows a template image, with an accessibility description and no title:
+  - when nothing more starts today (core-rules R35): today's day of the month (in the calendar of R18) in a drawn 16 × 16 pt calendar, matched pixel for pixel to Notion Calendar's icon: a 1.5 pt frame with a 3.5 pt corner radius, a solid 4.5 pt header, the day in bold New York (10 pt) centred 0.5 pt right with its baseline 3 pt up. Described as `NextUp: nothing more today`. The SF Symbol `21.calendar` was tried and looked small (17 × 15 with thin digits) and needs macOS 26;
+  - the SF Symbol `calendar.badge.exclamationmark` when NextUp has no calendar access, described as `NextUp: no calendar access`.
 
 **Menu**
 - R23. The menu is rebuilt in `menuNeedsUpdate` from the kept events and the current time. Opening it reads nothing from the calendar.
@@ -236,6 +236,7 @@ Manual QA (the user, on the installed app; stays open after the build). Run `scr
 - [ ] An event a guest declined shows the striped bar and `⚠` in the bar and in its menu row. (Whether the Google CalDAV feed gives EventKit the guests' statuses is checked here.)
 - [ ] An event added, moved or deleted in Calendar shows in the bar within a minute.
 - [ ] After sleep, and after midnight, the bar and the headers are right.
+- [ ] With nothing more today, the bar shows only today's date icon and the menu still lists `Tomorrow`; after midnight the bar shows the day's first event again.
 - [ ] With calendar access switched off in System Settings, the bar shows the badge icon and the menu offers `Open Privacy Settings…`, which lands on Privacy & Security → Calendars. Switched back on, the events return within a minute, without a relaunch.
 - [ ] `Launch at login`: ticking it adds NextUp to System Settings → General → Login Items, and NextUp is running after the next login. Unticking removes it.
 - [ ] A second `scripts/install.sh`, after a code change, doesn't make macOS ask for calendar access again.
