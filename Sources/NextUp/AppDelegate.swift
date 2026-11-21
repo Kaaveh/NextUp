@@ -122,19 +122,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             button.image = Self.colorBar(bar.color, striped: bar.declinedByGuest)
             button.imagePosition = .imageLeading
             button.title = bar.text
+        } else if events != nil {
+            button.image = Self.dateIcon(day: calendar.component(.day, from: now))
+            button.title = ""
         } else {
-            // Today's date, as Notion Calendar shows it; `N.calendar` ships with macOS 26 (menubar-app R22).
-            let (symbol, description) = events == nil
-                ? ("calendar.badge.exclamationmark", "NextUp: no calendar access")
-                : ("\(calendar.component(.day, from: now)).calendar", "NextUp: nothing more today")
-            // `.large` draws about 16 × 15 pt, the size of Notion Calendar's icon; the default is 13 × 12.
-            let image = (NSImage(systemSymbolName: symbol, accessibilityDescription: description)
-                ?? NSImage(systemSymbolName: "calendar", accessibilityDescription: description))?
-                .withSymbolConfiguration(NSImage.SymbolConfiguration(scale: .large))
+            let image = NSImage(systemSymbolName: "calendar.badge.exclamationmark",
+                                accessibilityDescription: "NextUp: no calendar access")
             image?.isTemplate = true
             button.image = image
             button.title = ""
         }
+    }
+
+    /// Today's date in a 16 × 16 pt calendar, drawn to match Notion Calendar's icon (menubar-app R22):
+    /// a 1.5 pt frame with a 3.5 pt radius, a solid 4.5 pt header, the day in bold New York with its baseline 3 pt up.
+    private static func dateIcon(day: Int) -> NSImage {
+        let image = NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
+            NSColor.black.set()
+            let frame = NSBezierPath(roundedRect: rect.insetBy(dx: 0.75, dy: 0.75), xRadius: 3.5, yRadius: 3.5)
+            frame.lineWidth = 1.5
+            frame.stroke()
+            frame.addClip()
+            NSRect(x: 0, y: rect.height - 4.5, width: rect.width, height: 4.5).fill()
+            var font = NSFont.systemFont(ofSize: 10, weight: .bold)
+            if let serif = font.fontDescriptor.withDesign(.serif) { font = NSFont(descriptor: serif, size: 10) ?? font }
+            let text = NSAttributedString(string: "\(day)", attributes: [.font: font, .foregroundColor: NSColor.black])
+            text.draw(at: NSPoint(x: (rect.width - text.size().width) / 2 + 0.5, y: 3 + font.descender))
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "NextUp: nothing more today"
+        return image
     }
 
     /// 4 × 16 pt, corner radius 2 pt, in the event's colour (menubar-app R21); `striped`: 45° stripes,
