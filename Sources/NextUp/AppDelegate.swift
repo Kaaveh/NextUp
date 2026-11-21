@@ -242,7 +242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     /// `Contents/Resources/meet.png`, drawn at 16 × 16 pt; `nil` (no icon) if the bundle lacks it.
-    private static let meetLogo: NSImage? = {
+    static let meetLogo: NSImage? = {
         let image = Bundle.main.image(forResource: "meet")
         image?.size = NSSize(width: 16, height: 16)
         return image

@@ -17,7 +17,9 @@ import Testing
         #expect(plan.map(\.title) == ["Design sync", "Planning", "Retro"])
         #expect(plan.first == Alert(id: "1795183200|https://meet.google.com/abc-defg-hij",
                                     fireDate: at(2026, 11, 20, 17, 29), title: "Design sync",
-                                    body: "Starts at 5:30\u{202F}PM", url: meet))
+                                    body: "Starts at 5:30\u{202F}PM", url: meet,
+                                    start: at(2026, 11, 20, 17, 30), end: at(2026, 11, 20, 18, 30),
+                                    timeRange: "5:30\u{2009}\u{2013}\u{2009}6:30\u{202F}PM"))
     }
 
     // meeting-alerts R5, R7
@@ -69,5 +71,24 @@ import Testing
         #expect(changes.remove.isEmpty)
         #expect(changes.add == [new[0]])
         #expect(new[0].id == plan()[0].id)
+    }
+
+    // meeting-alerts R27, R28: the panel's status on Design sync (17:30 to 18:30)
+    @Test(arguments: [
+        (at(2026, 11, 20, 17, 29), "in 1 m" as String?),
+        (at(2026, 11, 20, 17, 29, 59), "in 1 m"),
+        (at(2026, 11, 20, 17, 30), "now"),
+        (at(2026, 11, 20, 18, 29, 59), "now"),
+        (at(2026, 11, 20, 18, 30), nil),
+    ])
+    func panelStatus(now: Date, status: String?) {
+        #expect(AlertPlan.panelStatus(for: plan()[0], now: now) == status)
+    }
+
+    // meeting-alerts R26, R28
+    @Test func timeRange() {
+        #expect(plan()[0].timeRange == "5:30\u{2009}\u{2013}\u{2009}6:30\u{202F}PM")
+        let enGB = AlertPlan.alerts(for: Self.events, now: Self.now, calendar: tehran, locale: Locale(identifier: "en_GB"))
+        #expect(enGB[0].timeRange == "17:30\u{2009}\u{2013}\u{2009}18:30")
     }
 }
