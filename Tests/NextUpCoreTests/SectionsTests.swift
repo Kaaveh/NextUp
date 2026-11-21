@@ -22,12 +22,12 @@ import Testing
     @Test func example() {
         let now = at(2026, 11, 20, 12, 5, 13)
         #expect(lines(Self.events, now) == [
-            ["Now", "12:00\u{202F}PM · Standup"],
+            ["Ending in 25 m", "12:00\u{202F}PM · Standup"],
             ["Upcoming in 5 h 25 m", "5:30\u{202F}PM · Design sync"],
             ["Tomorrow", "12:00\u{202F}PM · Lunch"],
             ["Sun Nov 22", "9:30\u{202F}AM · Planning"],
         ])
-        #expect(Agenda.bar(for: Self.events, now: now, calendar: tehran)?.text == "Design sync · in 5 h 25 m")
+        #expect(Agenda.bar(for: Self.events, now: now, calendar: tehran)?.text == "Standup · now")
     }
 
     // core-rules R24: a row carries its event's colour and Meet link
@@ -49,7 +49,7 @@ import Testing
 
     // core-rules R27
     @Test(arguments: [
-        (at(2026, 11, 20, 17, 30), true, [["Now", "5:30\u{202F}PM · Design sync"], ["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], nil as String?),
+        (at(2026, 11, 20, 17, 30), true, [["Ending in 1 h", "5:30\u{202F}PM · Design sync"], ["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], "Design sync · now" as String?),
         (at(2026, 11, 20, 19), true, [["Tomorrow", "12:00\u{202F}PM · Lunch"], ["Sun Nov 22", "9:30\u{202F}AM · Planning"]], nil),
         (at(2026, 11, 22, 23), false, [], nil),
     ])
@@ -57,5 +57,23 @@ import Testing
         let events = withRetro ? Self.events : Self.events.filter { $0.title != "Retro" }
         #expect(lines(events, now) == expected)
         #expect(Agenda.bar(for: events, now: now, calendar: tehran)?.text == bar)
+    }
+
+    // core-rules R37–R40: R26's events plus two running from 16:00
+    @Test(arguments: [
+        (at(2026, 11, 20, 16, 30), "Focus · now" as String?, "Ending in 30 m"),
+        (at(2026, 11, 20, 17, 14, 59), "Workshop · now", "Ending in 46 m"),
+        (at(2026, 11, 20, 17, 15), "Design sync · in 15 m", "Ending in 45 m"),
+        (at(2026, 11, 20, 17, 30), "Design sync · now", "Ending in 30 m"),
+        (at(2026, 11, 20, 18), "Design sync · now", "Ending in 30 m"),
+        (at(2026, 11, 20, 18, 30), nil, "Tomorrow"),
+    ])
+    func runningEvent(now: Date, bar: String?, firstHeader: String) {
+        let events = Self.events + [
+            event("Workshop", at(2026, 11, 20, 16), at(2026, 11, 20, 18)),
+            event("Focus", at(2026, 11, 20, 16), at(2026, 11, 20, 17)),
+        ]
+        #expect(Agenda.bar(for: events, now: now, calendar: tehran)?.text == bar)
+        #expect(lines(events, now).first?.first == firstHeader)
     }
 }

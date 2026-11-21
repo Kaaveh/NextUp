@@ -36,8 +36,8 @@ key NSCalendarsFullAccessUsageDescription >/dev/null || fail "NSCalendarsFullAcc
 
 # 6. The self-check: sample events, no prompts.
 expected=$(cat <<'LINES'
-bar: Design sync · in 5 h 25 m
-menu: # Now
+bar: Standup · now
+menu: # Ending in 25 m
 menu: 12:00 PM · Standup > Join Google Meet
 menu: Join Google Meet
 menu: # Upcoming in 5 h 25 m

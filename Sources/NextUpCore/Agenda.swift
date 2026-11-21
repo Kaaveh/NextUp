@@ -1,6 +1,6 @@
 import Foundation
 
-/// What the menu bar shows: the next event's text and its calendar's colour.
+/// What the menu bar shows: the bar event's text (core-rules R37) and its calendar's colour.
 public struct BarContent: Equatable, Sendable {
     public var text: String
     public var color: RGB
@@ -28,7 +28,7 @@ public struct MenuRow: Equatable, Sendable {
     }
 }
 
-/// A menu section: "Now", "Upcoming in 5 h 25 m", "Tomorrow" or "Sun Nov 22", with its rows.
+/// A menu section: "Ending in 25 m", "Upcoming in 5 h 25 m", "Tomorrow" or "Sun Nov 22", with its rows.
 public struct MenuSection: Equatable, Sendable {
     public var header: String
     public var rows: [MenuRow]
@@ -45,7 +45,7 @@ public enum Agenda {
         DateInterval(start: now, end: day(after: 3, from: now, calendar: calendar))
     }
 
-    /// Now, Upcoming, Tomorrow and the day after tomorrow, empty ones left out (core-rules R22–R25).
+    /// Ending in, Upcoming, Tomorrow and the day after tomorrow, empty ones left out (core-rules R22–R25, R39).
     public static func sections(for events: [Event], now: Date, calendar: Calendar, locale: Locale) -> [MenuSection] {
         let tomorrow = day(after: 1, from: now, calendar: calendar)
         let dayAfter = day(after: 2, from: now, calendar: calendar)
@@ -63,7 +63,7 @@ public enum Agenda {
         let running = events.filter { $0.start <= now && now < $0.end }
         let later = starting(now, tomorrow)
         let groups = [
-            ("Now", running),
+            ("Ending " + (running.map(\.end).min().map { countdown(from: now, to: $0) } ?? ""), running),
             ("Upcoming " + (later.first.map { countdown(from: now, to: $0.start) } ?? ""), later),
             ("Tomorrow", starting(tomorrow, dayAfter)),
             (date.string(from: dayAfter), starting(dayAfter, end)),
@@ -94,10 +94,14 @@ public enum Agenda {
         calendar.startOfDay(for: calendar.date(byAdding: .day, value: n, to: now)!)
     }
 
-    /// "Design sync · in 5 h 25 m" for the next event, `nil` when none starts today (core-rules R18–R19, R35).
+    /// "Design sync · in 5 h 25 m" or "Standup · now" for the bar's event, `nil` when there is none (core-rules R18–R19, R35, R37–R38).
     public static func bar(for events: [Event], now: Date, calendar: Calendar) -> BarContent? {
-        guard let event = next(in: events, now: now),
-              event.start < day(after: 1, from: now, calendar: calendar) else { return nil }
+        let today = day(after: 1, from: now, calendar: calendar)
+        let next = next(in: events, now: now).flatMap { $0.start < today ? $0 : nil }
+        let soon = next.flatMap { minutes(from: now, to: $0.start) <= 15 ? $0 : nil }
+        let running = ordered(events).filter { $0.start <= now && now < $0.end }
+        let latest = running.max { $0.start < $1.start }  // first of equal starts: R10's tie-break
+        guard let event = soon ?? latest ?? next else { return nil }
         return BarContent(
             text: flag(event) + "\(shownTitle(event.title, limit: 30)) · \(countdown(from: now, to: event.start))",
             color: event.color,
@@ -124,9 +128,9 @@ public enum Agenda {
         ordered(events).first { $0.start > now }
     }
 
-    /// "in 5 h 25 m": whole minutes until `start`, rounded up (core-rules R12–R13).
+    /// "in 5 h 25 m": whole minutes until `start` (an event's start, or its end for R39), rounded up (core-rules R12–R13).
     static func countdown(from now: Date, to start: Date) -> String {
-        let minutes = Int((start.timeIntervalSince(now) / 60).rounded(.up))
+        let minutes = minutes(from: now, to: start)
         guard minutes > 0 else { return "now" }
         let (d, h, m) = (minutes / 1440, minutes % 1440 / 60, minutes % 60)
         var parts: [String] = []
@@ -134,6 +138,11 @@ public enum Agenda {
         if h > 0 { parts.append("\(h) h") }
         if m > 0 && d == 0 { parts.append("\(m) m") }
         return "in " + parts.joined(separator: " ")
+    }
+
+    /// Whole minutes from `now` to `start`, rounded up (core-rules R12).
+    static func minutes(from now: Date, to start: Date) -> Int {
+        Int((start.timeIntervalSince(now) / 60).rounded(.up))
     }
 
     /// Whitespace collapsed, ends trimmed, `(No title)` when empty, cut to `limit` characters with `…` (core-rules R15–R16).
