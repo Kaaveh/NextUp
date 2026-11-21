@@ -1,6 +1,6 @@
 # Spec: meeting-alerts
 
-Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open; the panel (R25–R35) is specified and not built.
+Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open.
 
 ## Objective
 
@@ -82,15 +82,15 @@ One minute before a meeting starts, macOS shows a notification with a Join butto
 
   Its `timeRange` is `5:30 – 6:30 PM`; in `en_GB`, `17:30 – 18:30`.
 - R29. Timers: each alert in `add` gets a one-shot `Timer` at its `fireDate`, on the main run loop in `.common` mode, kept by `id` and replacing an older timer of that id. Each id in `remove` invalidates its timer. A start from scratch (R11, R12, R16) invalidates every timer first. Open panels are never closed by this. A meeting first seen less than a minute before it starts gets no panel (R13).
-- R30. A firing timer opens the alert's panel, unless a panel with that `id` is open.
+- R30. A firing timer opens the alert's panel, unless a panel with that `id` is open or `panelStatus` is already `nil` (a sleep past the meeting's end).
 - R31. Look, from the reference screenshot, the same in light and dark mode:
   - a borderless `NSPanel`, about 460 × 72 pt, with `NSAppearance(named: .darkAqua)`, a corner radius of 12 pt, the fill `#2C2C2C` and a 1 pt border `#3B3B3B`;
   - on the left, 16 pt in, two lines: the title (13 pt medium, label colour, one line, cut at the tail); below it the status (R27) in `systemRed`, then ` · ` and the `timeRange` in the secondary label colour, both 12 pt;
-  - on the right, 12 pt in and centred vertically: a 28 pt tall button with the fill `#373737` and a 6 pt corner radius holding the Google Meet logo (16 pt, the image of menubar-app R26) and `Join Google Meet` (13 pt), joined to a 28 × 28 pt `chevron.down` part by a 1 pt divider. The chevron opens a menu with `Dismiss` and `Copy link`.
+  - on the right, 12 pt in and centred vertically: a 28 pt tall button with the fill `#373737` and a 6 pt corner radius holding the Google Meet logo (16 pt, the image of menubar-app R26) and `Join Google Meet` (13 pt), joined to a 28 × 28 pt `chevron.down` part by a 1 pt divider in the panel's fill `#2C2C2C`. The chevron opens a menu with `Dismiss` and `Copy link`.
 - R32. Place: the top right of the screen with the menu bar (`NSScreen.screens.first`), 8 pt below the top of its `visibleFrame` and 8 pt in from its right edge. Another open panel goes 8 pt below the lowest one; when one closes, the ones below move up. The panel sits at the `.statusBar` level, shows on every Space and over full-screen apps (`.canJoinAllSpaces`, `.fullScreenAuxiliary`), stays when NextUp isn't active (`hidesOnDeactivate = false`), and never takes focus from the app being typed in (`.nonactivatingPanel`): a click on its buttons works without activating NextUp.
 - R33. Each refresh passes `now` on: an open panel redraws its status, and closes when `panelStatus` is `nil`. The status is at most a minute stale, which the minute tick (menubar-app R16) keeps true at whole-minute starts.
 - R34. Actions:
-  - `Join Google Meet` opens the link with R20's check and closes the panel;
+  - `Join Google Meet` opens the link with R20's check (`MeetingAlerts.open`, shared with the notification) and closes the panel;
   - `Dismiss` closes it;
   - `Copy link` puts the link on the general pasteboard as a string, and the panel stays;
   - `Join` or a click on the notification (R20) also closes the open panel with the same `id`.
@@ -161,7 +161,7 @@ Checks (the gate, unattended): `scripts/check.sh`
 
 ## Success Criteria
 
-Done when: the alert plan and its changes are tested; scheduling, the Join action, quit and the alerts-off item are built; `scripts/check.sh` passes; the manual QA list stays open.
+Done when: the alert plan, its changes and the panel's status are tested; scheduling, the Join action, quit, the alerts-off item and the panel are built; `scripts/check.sh` passes; the manual QA list stays open.
 
 Manual QA (the user, on the installed app; stays open after the build):
 
@@ -184,8 +184,3 @@ Manual QA (the user, on the installed app; stays open after the build):
 
 None of its own. A Focus mode silences the notification unless NextUp is on its allowed list; breaking through needs an entitlement and is out of scope (see the map). The panel shows whatever the Focus (R35).
 
-## Tasks (build order)
-
-- T1. `Alert`'s `start`, `end` and `timeRange`, and `AlertPlan.panelStatus` (R26–R28), with every row of R28 as a test; update the tests that build an `Alert` by hand. Verify: `scripts/check.sh`.
-- T2. `MeetingPanel.swift` and the panel timers in `MeetingAlerts` (R25, R29–R35): open at the fire date, stack, redraw and close on refresh, the three actions, closing from the notification's Join. Read the self-check's path from `main.swift` to exit and confirm it reaches none of this code. Verify: `scripts/check.sh`, with the self-check's output unchanged.
-- T3. Implementing workflow (`docs/specs/README.md` «Workflow»): delete this Tasks section; set the status line and the README row back to built with manual QA open; keep the manual QA list unticked. Verify: `scripts/check.sh`.
