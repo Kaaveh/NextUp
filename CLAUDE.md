@@ -12,7 +12,8 @@ Spec first, then a fresh session implements it. `docs/specs/README.md` is the co
 swift build
 swift test
 scripts/check.sh                                        # the gate: rules, bundle, self-check (ad-hoc, no prompts)
-scripts/build-app.sh                                    # build/NextUp.app, signed with $NEXTUP_SIGN_IDENTITY or ad-hoc
+scripts/build-app.sh                                    # build/NextUp.app (universal), signed with $NEXTUP_SIGN_IDENTITY or ad-hoc
+scripts/make-dmg.sh [version]                           # build/NextUp-<version>.dmg, .zip, .sha256, always ad-hoc
 build/NextUp.app/Contents/MacOS/NextUp --self-check     # sample data, no prompts; needs the logged-in desktop session
 scripts/install.sh                                      # a person only: keychain identity, /Applications/NextUp.app, open
 footprint -p "$(pgrep -x NextUp)"                       # idle memory of the installed app

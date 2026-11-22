@@ -25,15 +25,15 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   | `CFBundleIdentifier` | `ir.kaavehdev.nextup` |
   | `CFBundleName`, `CFBundleExecutable` | `NextUp` |
   | `CFBundlePackageType` | `APPL` |
-  | `CFBundleShortVersionString`, `CFBundleVersion` | `1.0.0`, `1` |
+  | `CFBundleShortVersionString`, `CFBundleVersion` | `1.0.0`, `1`, raised for each release (release R21) |
   | `CFBundleInfoDictionaryVersion` | `6.0` |
   | `LSMinimumSystemVersion` | `14.0` |
   | `LSUIElement` | `true` |
   | `NSCalendarsFullAccessUsageDescription` | `NextUp shows your upcoming events in the menu bar. Your calendar stays on this Mac.` |
 
 - R7. `scripts/build-app.sh`:
-  1. `swift build -c release`;
-  2. the product folder is what `swift build -c release --show-bin-path` prints, and no path under `.build` is written into the script;
+  1. `swift build -c release --arch arm64 --arch x86_64`: universal (release R1);
+  2. the product folder is what the same command with `--show-bin-path` prints, and no path under `.build` is written into the script;
   3. a fresh `build/NextUp.app` with `Contents/MacOS/NextUp` (the product) and `Contents/Info.plist` (a copy of `Support/Info.plist`);
   4. `codesign --force --sign "${NEXTUP_SIGN_IDENTITY:--}" build/NextUp.app`, where `-` signs ad-hoc, then `codesign --verify --strict build/NextUp.app`;
   5. it prints nothing about the identity.
@@ -126,7 +126,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   2. fail if `Sources` contains `import SwiftUI`, `import Network` or `URLSession`;
   3. `swift test`;
   4. `NEXTUP_SIGN_IDENTITY=- scripts/build-app.sh`: always ad-hoc, whatever the environment holds, so no keychain is touched;
-  5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists;
+  5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists; `lipo -verify_arch` passes for `arm64` and `x86_64` (release R2);
   6. `timeout 30 build/NextUp.app/Contents/MacOS/NextUp --self-check` exits with 0, its output without the last line equals R36, and the last line matches `^footprint: [0-9]+\.[0-9] MB$`;
   7. print the footprint line and `check: OK`.
 - R39. `scripts/install.sh` is for a person, never for automation:

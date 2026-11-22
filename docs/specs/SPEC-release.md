@@ -10,7 +10,7 @@ Someone without Xcode or an Apple Developer account installs NextUp from a GitHu
 
 **Build**
 - R1. `scripts/build-app.sh` builds universal: `swift build -c release --arch arm64 --arch x86_64`, and asks for the product folder with the same flags. Every caller gets the same bundle, so the self-check runs on what ships. This amends menubar-app R7.
-- R2. `scripts/check.sh` fails unless `lipo -archs` on the bundle's binary lists `arm64` and `x86_64`.
+- R2. `scripts/check.sh` fails unless `lipo -verify_arch` passes on the bundle's binary for `arm64` and for `x86_64`, one call each (a second arch in the same call is read as a file).
 
 **Package** (`scripts/make-dmg.sh [version]`)
 - R3. The version is the first argument, else `CFBundleShortVersionString` of `Support/Info.plist`. It must match `^[0-9A-Za-z.-]+$`, because it goes into file names.

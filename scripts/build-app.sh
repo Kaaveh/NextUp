@@ -1,10 +1,11 @@
 #!/bin/bash
-# Release build → build/NextUp.app, signed with $NEXTUP_SIGN_IDENTITY or ad-hoc (`-`).
+# Universal release build → build/NextUp.app, signed with $NEXTUP_SIGN_IDENTITY or ad-hoc (`-`).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-swift build -c release
-bin=$(swift build -c release --show-bin-path)
+archs=(--arch arm64 --arch x86_64)
+swift build -c release "${archs[@]}"
+bin=$(swift build -c release "${archs[@]}" --show-bin-path)
 
 rm -rf build/NextUp.app
 mkdir -p build/NextUp.app/Contents/MacOS build/NextUp.app/Contents/Resources
