@@ -17,8 +17,7 @@ import Testing
         #expect(plan.map(\.title) == ["Design sync", "Planning", "Retro"])
         #expect(plan.first == Alert(id: "1795183200|https://meet.google.com/abc-defg-hij",
                                     fireDate: at(2026, 11, 20, 17, 29), title: "Design sync",
-                                    body: "Starts at 5:30\u{202F}PM", url: meet,
-                                    start: at(2026, 11, 20, 17, 30), end: at(2026, 11, 20, 18, 30),
+                                    url: meet, start: at(2026, 11, 20, 17, 30), end: at(2026, 11, 20, 18, 30),
                                     timeRange: "5:30\u{2009}\u{2013}\u{2009}6:30\u{202F}PM"))
     }
 

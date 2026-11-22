@@ -2,7 +2,7 @@
 
 <p align="center"><img src="docs/screenshot.png" width="475" alt="NextUp in the menu bar: the next meeting with its countdown, and the open menu with a Join Google Meet row and the events of today, tomorrow and the day after"></p>
 
-NextUp is a small macOS menu bar app that shows your next calendar event and a countdown, lists today and the next 2 days, and puts a Google Meet link one click away, with a notification one minute before each meeting. It exists to replace a much heavier calendar app's menu bar item for this one job, with a footprint of a few tens of megabytes.
+NextUp is a small macOS menu bar app that shows your next calendar event and a countdown, lists today and the next 2 days, and puts a Google Meet link one click away, with its own Join panel one minute before each meeting. It exists to replace a much heavier calendar app's menu bar item for this one job, with a footprint of a few tens of megabytes.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ It builds `NextUp.app`, signs it with the first Apple Development identity in yo
 ## Permissions
 
 - **Calendar.** On first launch macOS asks for full access to your calendars. NextUp reads today and the next 2 days from every calendar on your Mac; the events stay on this Mac. Without access the menu bar shows a calendar icon with an exclamation badge, and the menu offers `Open Privacy Settings…` (Privacy & Security → Calendars).
-- **Notifications.** On first launch macOS also asks to allow NextUp's notifications. One minute before an event with a Google Meet link starts, a notification shows its title and start time; `Join`, or a click on it, opens the meeting. NextUp asks for the style that stays on screen; if it leaves by itself, set NextUp's alert style to Persistent in System Settings → Notifications. With notifications off, the menu offers `Turn on meeting alerts…`. Quitting NextUp cancels the pending ones.
+- **Meeting panel.** Needs no permission. One minute before an event with a Google Meet link starts, NextUp opens a panel at the top right with the title, a countdown and `Join Google Meet`. It stays until you join, dismiss it, or the meeting ends. NextUp posts no macOS notification.
 - **Launch at login.** Ticking `Launch at login` in the menu adds NextUp to System Settings → General → Login Items.
 
 To see the first-run prompt again: `tccutil reset Calendar ir.kaavehdev.nextup`, while NextUp is in `/Applications`.
