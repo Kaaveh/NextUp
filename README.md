@@ -1,5 +1,7 @@
 # NextUp
 
+<p align="center"><img src="docs/screenshot.png" width="475" alt="NextUp in the menu bar: the next meeting with its countdown, and the open menu with a Join Google Meet row and the events of today, tomorrow and the day after"></p>
+
 NextUp is a small macOS menu bar app that shows your next calendar event and a countdown, lists today and the next 2 days, and puts a Google Meet link one click away, with a notification one minute before each meeting. It exists to replace a much heavier calendar app's menu bar item for this one job, with a footprint of a few tens of megabytes.
 
 ## Requirements
