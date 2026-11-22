@@ -87,16 +87,13 @@ Scripts as in [SPEC-menubar-app.md](SPEC-menubar-app.md). The workflow is one jo
 
 ## Success Criteria
 
-Manual QA (the user; stays open after the build):
+Manual QA (the user; stays open after the build). A test release proved the workflow, the assets and their checksums; a quarantined copy of its DMG may still sit in `build/release-test/` for the Gatekeeper items.
 
-- [ ] Push the tag `v1.0.0-test`. The workflow passes on `xcode-27`, the self-check included, and a pre-release `NextUp 1.0.0-test` holds the DMG, the zip and the `.sha256`, with generated notes.
-- [ ] `shasum -a 256 -c NextUp-1.0.0-test.sha256` in the download folder passes.
 - [ ] The DMG window shows NextUp beside Applications, and dragging one onto the other installs it.
 - [ ] First launch is blocked; Open Anyway in Privacy & Security opens it after one confirmation, and the calendar prompt follows.
 - [ ] On a second copy, `xattr -dr com.apple.quarantine` opens it without the Settings step.
 - [ ] Installing a newer release over it: note whether Open Anyway is needed again, whether macOS asks for calendar access again, and whether `Launch at login` is still ticked.
 - [ ] On an Intel Mac, if one is at hand: the app runs.
-- [ ] The test release and its tag are deleted.
 
 ## Open Questions
 

@@ -42,6 +42,7 @@ Build order: core-rules → menubar-app → meeting-alerts → release.
 - `tccutil reset Calendar <bundle id>` works only while an app with that id sits where LaunchServices indexes it: it worked under the home folder and failed under `/private/tmp`.
 - The keychain holds 2 valid Apple Development code-signing identities.
 - `/Applications` is writable without `sudo`. `/usr/bin/timeout` exists here, but not on GitHub's macOS 27.0.1 image; `/usr/bin/perl` exists on both.
+- On that image the release workflow runs end to end, the self-check included (11.6 MB), and publishes a pre-release with the DMG, zip and `.sha256`; `shasum -c` passes on the downloads. `spctl --assess` rejects the downloaded, quarantined app, as an ad-hoc build should be.
 - `swift build -c release --arch arm64 --arch x86_64` builds a universal binary, `minos 14.0` in both slices, into the same folder as a native build. It warns that x86_64 is deprecated.
 - A process started from a shell can build an `NSStatusItem` and its `NSMenu`, print them and exit, with no prompt. The self-check relies on this.
 - An AppKit agent with one status item and a small menu, built for release, bundled and ad-hoc signed, idles at 17 to 18 MB of physical footprint with no calendar code running. That leaves about 12 MB for everything else.
@@ -59,7 +60,6 @@ Build order: core-rules → menubar-app → meeting-alerts → release.
 | Guests' statuses (a declined guest) reaching `EKEvent.attendees` from the Google CalDAV source | menubar-app manual QA |
 | Idle memory with real calendars against the 30 MB target | menubar-app manual QA and R40–R42 |
 | What Notion Calendar does where the screenshots don't show it | Open Questions below |
-| The release workflow on GitHub's `xcode-27` image, the self-check included | release manual QA |
 | Gatekeeper's Open Anyway for a downloaded ad-hoc build, and the grants after an update | release manual QA |
 
 ## Shared decisions (bind every module)
