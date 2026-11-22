@@ -1,7 +1,7 @@
 import AppKit
 import NextUpCore
 
-/// NextUp's own Notion-style panel beside the notification: the title, the status and `Join Google Meet` (meeting-alerts R31–R34).
+/// NextUp's own Notion-style panel, its only meeting alert: the title, the status and `Join Google Meet` (meeting-alerts R31–R34).
 /// `MeetingAlerts` opens, stacks and closes it; normal mode only (R35).
 final class MeetingPanel: NSPanel {
     let alert: Alert

@@ -7,7 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     /// The one store for the app's life; `nil` in the self-check, which calls no EventKit.
     private var source: CalendarSource?
-    /// `nil` in the self-check, which calls no UserNotifications (meeting-alerts R23).
+    /// `nil` in the self-check, which opens no panel (meeting-alerts R23).
     private var alerts: MeetingAlerts?
     private var timer: Timer?
     /// The events of the last refresh; `nil` without calendar access.
@@ -34,9 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             SelfCheck.run(statusItem)
             return
         }
-        // The delegate before any `await`, so a click that launches NextUp reaches it (meeting-alerts R18).
-        let alerts = MeetingAlerts()
-        self.alerts = alerts
+        alerts = MeetingAlerts()
         let source = CalendarSource()
         self.source = source
         refresh()
@@ -46,20 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 await source.requestAccess()
                 refresh()
             }
-            await alerts.requestAuthorization()
-            // Reads the new status now, not at the next tick, and reschedules if it changed (R16).
-            refresh()
         }
-    }
-
-    /// Pending alerts go before the process does (meeting-alerts R14).
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let alerts else { return .terminateNow }
-        Task {
-            await alerts.removeAll()
-            sender.reply(toApplicationShouldTerminate: true)
-        }
-        return .terminateLater
     }
 
     func refresh() {
@@ -208,11 +193,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(settings)
         }
         menu.addItem(.separator())
-        if alerts?.isOff == true {
-            let alertsOff = NSMenuItem(title: "Turn on meeting alerts…", action: #selector(openNotificationSettings), keyEquivalent: "")
-            alertsOff.target = self
-            menu.addItem(alertsOff)
-        }
         let login = NSMenuItem(title: "Launch at login", action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
         login.target = self
         // The self-check reads no ServiceManagement and draws it unchecked (menubar-app R33).
@@ -262,10 +242,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openPrivacySettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Calendars")!
         NSWorkspace.shared.open(url)
-    }
-
-    @objc private func openNotificationSettings() {
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension")!)
     }
 
     @objc private func join(_ sender: NSMenuItem) {
