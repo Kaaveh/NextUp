@@ -23,7 +23,7 @@ Build order: core-rules → menubar-app → meeting-alerts → release.
 - A settings window, or preferences of any kind.
 - Creating or editing events.
 - Zoom, Teams and any link other than Google Meet; a Meet link anywhere but the event's notes.
-- Notarization, a Developer ID, the hardened runtime, the sandbox, an updater, an app icon. CI beyond the `v*` tag workflow (release).
+- Notarization, a Developer ID, the hardened runtime, the sandbox, an updater. CI beyond the `v*` tag workflow (release).
 - Localization (the UI is English) and special handling of right-to-left titles.
 - Choosing calendars; merging one event that sits in two calendars.
 - Alerts for events without a Meet link; snooze; a lead time other than one minute; a macOS notification (removed on 2026-11-22: it sat under the panel and showed again after Join). NextUp's own panel is a window, so it shows whatever the Focus.
