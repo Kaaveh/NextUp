@@ -7,6 +7,7 @@ NextUp is built spec-first. A spec keeps the decisions: what the app does, where
 | `core-rules` | `Package.swift`, `Sources/NextUpCore/`, `Tests/NextUpCoreTests/` | Built | [SPEC-core-rules.md](SPEC-core-rules.md) |
 | `menubar-app` | `Sources/NextUp/`, `Support/Info.plist`, `scripts/` | Built, manual QA open | [SPEC-menubar-app.md](SPEC-menubar-app.md) |
 | `meeting-alerts` | `Sources/NextUpCore/AlertPlan.swift`, `Sources/NextUp/MeetingAlerts.swift`, `Sources/NextUp/MeetingPanel.swift` | Built, manual QA open | [SPEC-meeting-alerts.md](SPEC-meeting-alerts.md) |
+| `release` | `scripts/make-dmg.sh`, `.github/workflows/release.yml`, README's Install | Specified, not built | [SPEC-release.md](SPEC-release.md) |
 
 ## Workflow
 
