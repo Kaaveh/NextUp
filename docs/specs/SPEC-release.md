@@ -64,7 +64,7 @@ scripts/make-dmg.sh              # build/NextUp-<plist version>.dmg, .zip, .sha2
 scripts/make-dmg.sh 1.2.0        # the same, named 1.2.0
 ```
 
-Checks (unattended): `scripts/check.sh`, then `scripts/make-dmg.sh`, `hdiutil verify build/NextUp-<version>.dmg` and `(cd build && shasum -a 256 -c NextUp-<version>.sha256)`. Where installed: `shellcheck scripts/*.sh` and `actionlint`.
+Checks (unattended): `scripts/check.sh`, then `scripts/make-dmg.sh`, `hdiutil verify build/NextUp-<version>.dmg` and `(cd build && shasum -a 256 -c NextUp-<version>.sha256)`. Where installed: `shellcheck scripts/*.sh` and `actionlint -ignore 'label "xcode-27" is unknown' .github/workflows/release.yml` (actionlint's label list predates the preview image).
 
 ## Code Style
 
@@ -110,5 +110,5 @@ Manual QA (the user; stays open after the build):
 ## Tasks (build order)
 
 - T1. Universal build, the lipo check and `scripts/make-dmg.sh` (R1–R8); the command in `CLAUDE.md`; menubar-app R7 and R38 amended. Verify: `scripts/check.sh && scripts/make-dmg.sh && hdiutil verify build/NextUp-1.0.0.dmg && (cd build && shasum -a 256 -c NextUp-1.0.0.sha256) && shellcheck scripts/*.sh`
-- T2. The workflow (R9–R15). Verify: `actionlint .github/workflows/release.yml`
+- T2. The workflow (R9–R15). Verify: `actionlint -ignore 'label "xcode-27" is unknown' .github/workflows/release.yml`
 - T3. The README (R16–R21); close the spec out. Verify: `grep -q 'Open Anyway' README.md && grep -q 'xattr -dr com.apple.quarantine' README.md`
