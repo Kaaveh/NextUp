@@ -6,7 +6,7 @@ NextUp is a small macOS menu bar app that shows your next calendar event and a c
 
 ## Requirements
 
-- macOS 14 or later to run.
+- macOS 14 or later, on Apple silicon or Intel, to run.
 - Xcode with Swift 6.2 or later to build.
 
 ## Build and test
@@ -20,6 +20,33 @@ scripts/check.sh      # tests, the app bundle and a self-check with sample event
 `scripts/check.sh` signs ad-hoc and never asks for a permission. Its self-check puts a sample item in the menu bar for about 5 seconds, so it needs a logged-in desktop session.
 
 ## Install
+
+### Download
+
+1. Download `NextUp-<version>.dmg` from [Releases](https://github.com/Kaaveh/NextUp/releases/latest).
+2. Open it and drag **NextUp** onto **Applications**.
+
+<!-- Screenshot: the DMG window, NextUp beside the Applications link. -->
+
+**First launch.** NextUp is not notarized by Apple (it is signed ad-hoc, without a developer account), so macOS blocks it the first time:
+
+1. Open NextUp from Applications. macOS says Apple could not verify it is free of malware; click **Done**.
+2. Open **System Settings → Privacy & Security**, scroll to **Security**, and click **Open Anyway** beside the line about NextUp.
+3. Confirm with your password or Touch ID. NextUp opens, and later launches open normally.
+
+<!-- Screenshot: Privacy & Security with the Open Anyway button for NextUp. -->
+
+Or, instead of those 3 steps, in Terminal:
+
+```
+xattr -dr com.apple.quarantine /Applications/NextUp.app
+```
+
+NextUp then asks for calendar access (see Permissions).
+
+**Updating.** Quit NextUp (`Quit NextUp` in its menu), install the new DMG the same way and choose **Replace**. Every release has a new ad-hoc signature, so macOS treats it as a new app: it may ask for calendar access again, and the first-launch steps may be needed again.
+
+### Build from source
 
 ```
 scripts/install.sh
@@ -46,3 +73,12 @@ footprint -p "$(pgrep -x NextUp)"
 The header line holds `Footprint: <n> MB`. The self-check prints its own number as the last line of `scripts/check.sh`, with no calendar code running.
 
 NextUp reads the calendars on your Mac, stores nothing and has no network code.
+
+## How to cut a release
+
+For the maintainer:
+
+1. In `Support/Info.plist`, set `CFBundleShortVersionString` to the new version and raise `CFBundleVersion`; commit on `main`.
+2. Tag and push: `git tag v1.2.0 && git push origin v1.2.0`.
+
+The Release workflow checks that the tag matches `CFBundleShortVersionString`, runs `swift test` and `scripts/check.sh`, builds the DMG, zip and checksums with `scripts/make-dmg.sh`, and publishes the release with generated notes. A tag with a suffix, such as `v1.2.0-rc1`, becomes a pre-release. `scripts/make-dmg.sh` runs locally too and writes to `build/`.

@@ -1,6 +1,6 @@
 # Spec: release
 
-Module 4 of 4 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: specified, not built.
+Module 4 of 4 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open.
 
 ## Objective
 
@@ -87,8 +87,6 @@ Scripts as in [SPEC-menubar-app.md](SPEC-menubar-app.md). The workflow is one jo
 
 ## Success Criteria
 
-Done when: `scripts/check.sh` passes on a universal bundle; `scripts/make-dmg.sh` writes a DMG that `hdiutil verify` accepts, a zip, and a `.sha256` that `shasum -c` accepts; `shellcheck` and `actionlint` report nothing; the README holds R16–R21; the manual QA list stays open.
-
 Manual QA (the user; stays open after the build):
 
 - [ ] Push the tag `v1.0.0-test`. The workflow passes on `xcode-27`, the self-check included, and a pre-release `NextUp 1.0.0-test` holds the DMG, the zip and the `.sha256`, with generated notes.
@@ -96,7 +94,7 @@ Manual QA (the user; stays open after the build):
 - [ ] The DMG window shows NextUp beside Applications, and dragging one onto the other installs it.
 - [ ] First launch is blocked; Open Anyway in Privacy & Security opens it after one confirmation, and the calendar prompt follows.
 - [ ] On a second copy, `xattr -dr com.apple.quarantine` opens it without the Settings step.
-- [ ] Installing a newer release over it: note whether macOS asks for calendar access again, and whether `Launch at login` is still ticked.
+- [ ] Installing a newer release over it: note whether Open Anyway is needed again, whether macOS asks for calendar access again, and whether `Launch at login` is still ticked.
 - [ ] On an Intel Mac, if one is at hand: the app runs.
 - [ ] The test release and its tag are deleted.
 
@@ -107,8 +105,3 @@ Manual QA (the user; stays open after the build):
 | User | The two README screenshots (R19) |
 | Later | `xcode-27` is a preview label: switch to the GA label once GitHub ships Xcode 27 on one |
 
-## Tasks (build order)
-
-- T1. Universal build, the lipo check and `scripts/make-dmg.sh` (R1–R8); the command in `CLAUDE.md`; menubar-app R7 and R38 amended. Verify: `scripts/check.sh && scripts/make-dmg.sh && hdiutil verify build/NextUp-1.0.0.dmg && (cd build && shasum -a 256 -c NextUp-1.0.0.sha256) && shellcheck scripts/*.sh`
-- T2. The workflow (R9–R15). Verify: `actionlint -ignore 'label "xcode-27" is unknown' .github/workflows/release.yml`
-- T3. The README (R16–R21); close the spec out. Verify: `grep -q 'Open Anyway' README.md && grep -q 'xattr -dr com.apple.quarantine' README.md`
