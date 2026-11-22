@@ -23,8 +23,10 @@ scripts/check.sh      # tests, the app bundle and a self-check with sample event
 
 ### Download
 
-1. Download `NextUp-<version>.dmg` from [Releases](https://github.com/Kaaveh/NextUp/releases/latest).
-2. Open it and drag **NextUp** onto **Applications**.
+1. If NextUp is already running, quit it (`Quit NextUp` in its menu): Finder can't replace a running copy.
+2. Download `NextUp-<version>.dmg` from [Releases](https://github.com/Kaaveh/NextUp/releases/latest).
+3. Open it and drag **NextUp** onto **Applications**.
+4. Eject the DMG, and from now on open NextUp from Applications, not from the DMG window: a copy opened there runs from the disk image and is gone once it's ejected.
 
 <!-- Screenshot: the DMG window, NextUp beside the Applications link. -->
 

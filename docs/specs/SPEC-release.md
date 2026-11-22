@@ -11,6 +11,7 @@ Someone without Xcode or an Apple Developer account installs NextUp from a GitHu
 **Build**
 - R1. `scripts/build-app.sh` builds universal: `swift build -c release --arch arm64 --arch x86_64`, and asks for the product folder with the same flags. Every caller gets the same bundle, so the self-check runs on what ships. This amends menubar-app R7.
 - R2. `scripts/check.sh` fails unless `lipo -verify_arch` passes on the bundle's binary for `arm64` and for `x86_64`, one call each (a second arch in the same call is read as a file).
+- R22. The app icon is `Support/AppIcon.icns`, in the Apple Calendar style: a white macOS icon tile with `NEXT` in red over a large black `UP`. `scripts/make-icon.swift` draws it with AppKit and writes it with `iconutil`; the `.icns` is committed, so builds don't run the script. `scripts/build-app.sh` copies it to `Contents/Resources`, `Info.plist` names it in `CFBundleIconFile`, and `scripts/check.sh` fails without either.
 
 **Package** (`scripts/make-dmg.sh [version]`)
 - R3. The version is the first argument, else `CFBundleShortVersionString` of `Support/Info.plist`. It must match `^[0-9A-Za-z.-]+$`, because it goes into file names.
@@ -30,7 +31,7 @@ Someone without Xcode or an Apple Developer account installs NextUp from a GitHu
 - R15. The tag reaches shell code only through `GITHUB_REF_NAME`, never as `${{ }}` inside `run:`, so a tag name can't inject a command.
 
 **README**
-- R16. `Install` starts with the download: the DMG from Releases, open it, drag NextUp to Applications.
+- R16. `Install` starts with the download: quit a running NextUp (Finder can't replace it), the DMG from Releases, open it, drag NextUp to Applications, eject it and open NextUp from Applications, never from the DMG window (seen in manual QA: a running copy blocked the drag, and the one opened from the DMG ran as a second instance).
 - R17. First launch: macOS blocks it because it isn't notarized. Open it once, then System Settings → Privacy & Security → Open Anyway, and confirm once. Terminal alternative: `xattr -dr com.apple.quarantine /Applications/NextUp.app`.
 - R18. After an update macOS may ask for calendar access again, because each ad-hoc build is a new identity. Notifications aren't mentioned: NextUp asks for none (meeting-alerts).
 - R19. Two screenshot placeholders as HTML comments: the DMG window, and the Open Anyway button. No image file until the user takes them.
@@ -47,7 +48,9 @@ Provided: the release assets `NextUp-<version>.dmg`, `NextUp-<version>.zip` and 
 
 ```
 scripts/build-app.sh             + the two --arch flags (R1)
-scripts/check.sh                 + the lipo check (R2)
+scripts/check.sh                 + the lipo check (R2), the icon check (R22)
+scripts/make-icon.swift          draws Support/AppIcon.icns (R22)
+Support/AppIcon.icns             the app icon (R22)
 scripts/make-dmg.sh              build/NextUp-<version>.dmg, .zip, .sha256
 .github/workflows/release.yml    tag → check → package → GitHub Release
 README.md                        Install, How to cut a release
@@ -89,6 +92,7 @@ Scripts as in [SPEC-menubar-app.md](SPEC-menubar-app.md). The workflow is one jo
 
 Manual QA (the user; stays open after the build). A test release proved the workflow, the assets and their checksums; a quarantined copy of its DMG may still sit in `build/release-test/` for the Gatekeeper items.
 
+- [ ] The DMG window and /Applications show NextUp with the NEXT / UP icon.
 - [ ] The DMG window shows NextUp beside Applications, and dragging one onto the other installs it.
 - [ ] First launch is blocked; Open Anyway in Privacy & Security opens it after one confirmation, and the calendar prompt follows.
 - [ ] On a second copy, `xattr -dr com.apple.quarantine` opens it without the Settings step.
