@@ -1,6 +1,6 @@
 # Spec: menubar-app
 
-Module 2 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open.
+Module 2 of 4 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `core-rules`. Status: built; the manual QA list is open.
 
 ## Objective
 
@@ -24,16 +24,17 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   |---|---|
   | `CFBundleIdentifier` | `ir.kaavehdev.nextup` |
   | `CFBundleName`, `CFBundleExecutable` | `NextUp` |
+  | `CFBundleIconFile` | `AppIcon` (release R22) |
   | `CFBundlePackageType` | `APPL` |
-  | `CFBundleShortVersionString`, `CFBundleVersion` | `1.0.0`, `1` |
+  | `CFBundleShortVersionString`, `CFBundleVersion` | `1.0.0`, `1`, raised for each release (release R21) |
   | `CFBundleInfoDictionaryVersion` | `6.0` |
   | `LSMinimumSystemVersion` | `14.0` |
   | `LSUIElement` | `true` |
   | `NSCalendarsFullAccessUsageDescription` | `NextUp shows your upcoming events in the menu bar. Your calendar stays on this Mac.` |
 
 - R7. `scripts/build-app.sh`:
-  1. `swift build -c release`;
-  2. the product folder is what `swift build -c release --show-bin-path` prints, and no path under `.build` is written into the script;
+  1. `swift build -c release --arch arm64 --arch x86_64`: universal (release R1);
+  2. the product folder is what the same command with `--show-bin-path` prints, and no path under `.build` is written into the script;
   3. a fresh `build/NextUp.app` with `Contents/MacOS/NextUp` (the product) and `Contents/Info.plist` (a copy of `Support/Info.plist`);
   4. `codesign --force --sign "${NEXTUP_SIGN_IDENTITY:--}" build/NextUp.app`, where `-` signs ad-hoc, then `codesign --verify --strict build/NextUp.app`;
   5. it prints nothing about the identity.
@@ -126,8 +127,8 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   2. fail if `Sources` contains `import SwiftUI`, `import Network` or `URLSession`;
   3. `swift test`;
   4. `NEXTUP_SIGN_IDENTITY=- scripts/build-app.sh`: always ad-hoc, whatever the environment holds, so no keychain is touched;
-  5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists;
-  6. `timeout 30 build/NextUp.app/Contents/MacOS/NextUp --self-check` exits with 0, its output without the last line equals R36, and the last line matches `^footprint: [0-9]+\.[0-9] MB$`;
+  5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists; `meet.png` and `AppIcon.icns` (with `CFBundleIconFile`) are in `Contents/Resources`; `lipo -verify_arch` passes for `arm64` and `x86_64` (release R2);
+  6. `perl -e 'alarm shift; exec @ARGV' 30 build/NextUp.app/Contents/MacOS/NextUp --self-check` (a 30 s limit; macOS 27.0 has no `timeout`) exits with 0, its output without the last line equals R36, and the last line matches `^footprint: [0-9]+\.[0-9] MB$`;
   7. print the footprint line and `check: OK`.
 - R39. `scripts/install.sh` is for a person, never for automation:
   1. the identity is `$NEXTUP_SIGN_IDENTITY` when set; otherwise the SHA-1 on the first line containing `Apple Development` in the output of `security find-identity -v -p codesigning`; otherwise `-`, with a warning that macOS will ask for the permissions again after every install;
@@ -174,7 +175,7 @@ build/                                 output, ignored by git
 
 ## Tech Stack
 
-Swift 6, AppKit, EventKit, ServiceManagement, on top of `NextUpCore`. Shell scripts for bash 3.2, with `codesign`, `plutil`, `PlistBuddy`, `ditto` and `timeout` from macOS. No dependencies.
+Swift 6, AppKit, EventKit, ServiceManagement, on top of `NextUpCore`. Shell scripts for bash 3.2, with `codesign`, `plutil`, `PlistBuddy`, `ditto` and `perl` from macOS. No dependencies.
 
 ## Commands
 

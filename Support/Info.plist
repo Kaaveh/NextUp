@@ -6,6 +6,8 @@
 	<string>ir.kaavehdev.nextup</string>
 	<key>CFBundleName</key>
 	<string>NextUp</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleExecutable</key>
 	<string>NextUp</string>
 	<key>CFBundlePackageType</key>

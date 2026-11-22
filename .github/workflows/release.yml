@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # Public-preview image with Xcode 27 on macOS 27, like the development Mac.
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Tag matches CFBundleShortVersionString
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          plist=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Support/Info.plist)
+          if [ "${version%%-*}" != "$plist" ]; then
+            echo "::error::tag $GITHUB_REF_NAME doesn't match CFBundleShortVersionString $plist in Support/Info.plist"
+            exit 1
+          fi
+
+      - run: swift test
+
+      - run: scripts/check.sh
+
+      - run: scripts/make-dmg.sh "${GITHUB_REF_NAME#v}"
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          pre=
+          case $GITHUB_REF_NAME in *-*) pre=1 ;; esac
+          gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes \
+            --title "NextUp $version" ${pre:+--prerelease} \
+            "build/NextUp-$version.dmg" "build/NextUp-$version.zip" "build/NextUp-$version.sha256"

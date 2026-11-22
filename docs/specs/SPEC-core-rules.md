@@ -1,6 +1,6 @@
 # Spec: core-rules
 
-Module 1 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built.
+Module 1 of 4 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on nothing. Status: built.
 
 ## Objective
 

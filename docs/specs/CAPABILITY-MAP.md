@@ -7,8 +7,9 @@ NextUp is a macOS menu bar app for one person on their own Mac. The bar shows th
 | `core-rules` | [SPEC-core-rules.md](SPEC-core-rules.md) | The Swift package and `NextUpCore`, the pure rules: the Meet link in an event's notes, which event is next, the countdown, the bar's text, the menu's sections and rows. Also the repo's `CLAUDE.md`, `README.md` and `.gitignore` | — |
 | `menubar-app` | [SPEC-menubar-app.md](SPEC-menubar-app.md) | The AppKit agent app: reading the macOS calendar store, the bar, the menu, Join from the menu, the no-access state, refresh, Launch at login, Quit. Also the bundle, check and install scripts, the self-check and the first memory number | `core-rules` |
 | `meeting-alerts` | [SPEC-meeting-alerts.md](SPEC-meeting-alerts.md) | NextUp's own Notion-style panel one minute before a meeting, with Join: the pure alert plan and the panel timers kept equal to it | `menubar-app` |
+| `release` | [SPEC-release.md](SPEC-release.md) | Install without Xcode: the universal build, the DMG, zip and checksums, the `v*` tag workflow that publishes a GitHub Release, the README's Install section | `menubar-app` |
 
-Build order: core-rules → menubar-app → meeting-alerts.
+Build order: core-rules → menubar-app → meeting-alerts → release.
 
 ## Success
 
@@ -22,7 +23,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 - A settings window, or preferences of any kind.
 - Creating or editing events.
 - Zoom, Teams and any link other than Google Meet; a Meet link anywhere but the event's notes.
-- Public release: notarization, the hardened runtime, the sandbox, an updater, CI, an app icon.
+- Notarization, a Developer ID, the hardened runtime, the sandbox, an updater. CI beyond the `v*` tag workflow (release).
 - Localization (the UI is English) and special handling of right-to-left titles.
 - Choosing calendars; merging one event that sits in two calendars.
 - Alerts for events without a Meet link; snooze; a lead time other than one minute; a macOS notification (removed on 2026-11-22: it sat under the panel and showed again after Join). NextUp's own panel is a window, so it shows whatever the Focus.
@@ -40,7 +41,9 @@ Build order: core-rules → menubar-app → meeting-alerts.
 - With ad-hoc signing macOS asks for the permissions again after every rebuild, because the identity changes.
 - `tccutil reset Calendar <bundle id>` works only while an app with that id sits where LaunchServices indexes it: it worked under the home folder and failed under `/private/tmp`.
 - The keychain holds 2 valid Apple Development code-signing identities.
-- `/Applications` is writable without `sudo`. `/usr/bin/timeout` exists.
+- `/Applications` is writable without `sudo`. `/usr/bin/timeout` exists here, but not on GitHub's macOS 27.0.1 image; `/usr/bin/perl` exists on both.
+- On that image the release workflow runs end to end, the self-check included (11.6 MB), and publishes a pre-release with the DMG, zip and `.sha256`; `shasum -c` passes on the downloads. `spctl --assess` rejects the downloaded, quarantined app, as an ad-hoc build should be.
+- `swift build -c release --arch arm64 --arch x86_64` builds a universal binary, `minos 14.0` in both slices, into the same folder as a native build. It warns that x86_64 is deprecated.
 - A process started from a shell can build an `NSStatusItem` and its `NSMenu`, print them and exit, with no prompt. The self-check relies on this.
 - An AppKit agent with one status item and a small menu, built for release, bundled and ad-hoc signed, idles at 17 to 18 MB of physical footprint with no calendar code running. That leaves about 12 MB for everything else.
 - In `en_US` the short time has U+202F before `AM` and `PM`.
@@ -57,6 +60,7 @@ Build order: core-rules → menubar-app → meeting-alerts.
 | Guests' statuses (a declined guest) reaching `EKEvent.attendees` from the Google CalDAV source | menubar-app manual QA |
 | Idle memory with real calendars against the 30 MB target | menubar-app manual QA and R40–R42 |
 | What Notion Calendar does where the screenshots don't show it | Open Questions below |
+| Gatekeeper's Open Anyway for a downloaded ad-hoc build, and the grants after an update | release manual QA |
 
 ## Shared decisions (bind every module)
 
@@ -68,12 +72,12 @@ Build order: core-rules → menubar-app → meeting-alerts.
 - The window is today plus the next 2 days.
 - No network code, no third-party packages, nothing stored.
 - The bundle id is `ir.kaavehdev.nextup`. It never changes after the first install, because the permissions and the login item hang on it.
-- Signing: automated checks sign ad-hoc, which never prompts. The user's install signs with a local Apple Development identity picked at run time, so that macOS can keep the grants across rebuilds. No identity name, team id or hash is ever committed.
-- No sandbox, no hardened runtime, no notarization: the app is built and installed locally for personal use.
+- Signing: automated checks sign ad-hoc, which never prompts. The user's install signs with a local Apple Development identity picked at run time, so that macOS can keep the grants across rebuilds. A GitHub Release is always ad-hoc, because an identity's name would ship inside its signature. No identity name, team id or hash is ever committed.
+- No sandbox, no hardened runtime, no notarization: the app is built locally, or downloaded from a GitHub Release and let past Gatekeeper once by hand (release).
 - Unattended checks never raise a prompt. They run `NextUp --self-check`, which uses sample events and touches no calendar, notification or login-item API. Everything else is manual QA.
 - Memory: under 30 MB of physical footprint at idle. A higher measured number is recorded as an open item; the code isn't contorted to reach the target.
 - The minimum is macOS 14, the lowest version that has every API used. Only macOS 27 is tested.
-- The look is copied from Notion Calendar's menu bar item, from two reference screenshots that stay out of the repo: a thin colour bar and `<title> · in 5 h 24 m` in the bar, and a native menu with grey section headers and rows of `<bar> 5:30 PM · <title>`. An event a guest declined gets a striped bar and a `⚠ ` before the text.
+- The look is copied from Notion Calendar's menu bar item, from two reference screenshots that stay out of the repo: a thin colour bar and `<title> · in 5 h 24 m` in the bar, and a native menu with grey section headers and rows of `<bar> 5:30 PM · <title>`. An event a guest declined gets a striped bar and a `⚠ ` before the text. Join items show the Google Meet logo, public releases included: the user chose to keep it.
 - UI text is English. The clock format follows the system.
 - Privacy: no real event titles, people, calendar names, email addresses, home-folder paths, identity names, team ids or hashes anywhere in the repo. NextUp logs no event data.
 
@@ -93,6 +97,8 @@ Build order: core-rules → menubar-app → meeting-alerts.
 12. The countdown is whole minutes rounded up, in one format in the bar and the header, with `in 1 d 3 h` beyond a day (core-rules R12–R13).
 13. The calendar is read again on every trigger, the minute tick included, on the main thread (menubar-app R11, R15–R16).
 14. An event that sits in two calendars shows twice in the menu, and alerts once (meeting-alerts R3).
+15. A release tag is `v` plus `CFBundleShortVersionString`, optionally with a `-suffix` that makes it a pre-release; any other tag fails the workflow (release R13–R14).
+16. The DMG window shows the app and an Applications link in Finder's default layout, with no background or icon positions (release R5).
 
 ## Open Questions
 
@@ -100,6 +106,5 @@ Build order: core-rules → menubar-app → meeting-alerts.
 |---|---|
 | User | Two Apple Development identities are in the keychain. Is the first one listed the right one, or will `NEXTUP_SIGN_IDENTITY` be set? |
 | User | With several events on one day, is `Ending in …` / `Upcoming in …` the grouping wanted? Notion's wasn't seen |
-| User | The Google Meet logo is Google's trademark. Before a public release: keep it, or swap it for a generic video symbol? |
 | User | If idle memory measures 30 MB or more: accept the number, or spec an optimisation pass? |
 | User | A right-to-left title may put the countdown before the title in the bar (not tested). Is a fix wanted? |

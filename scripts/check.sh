@@ -32,6 +32,10 @@ codesign --verify --strict "$app" || fail "codesign --verify --strict failed"
 [ "$(key CFBundleIdentifier)" = ir.kaavehdev.nextup ] || fail "CFBundleIdentifier isn't ir.kaavehdev.nextup"
 key NSCalendarsFullAccessUsageDescription >/dev/null || fail "NSCalendarsFullAccessUsageDescription is missing"
 [ -f "$app/Contents/Resources/meet.png" ] || fail "Contents/Resources/meet.png is missing"
+[ -f "$app/Contents/Resources/AppIcon.icns" ] && [ "$(key CFBundleIconFile)" = AppIcon ] || fail "the app icon is missing"
+for arch in arm64 x86_64; do  # one per call: this lipo reads a second arch as a file
+    lipo "$app/Contents/MacOS/NextUp" -verify_arch "$arch" || fail "the binary has no $arch slice"
+done
 
 # 6. The self-check: sample events, no prompts.
 expected=$(cat <<'LINES'
@@ -51,7 +55,8 @@ menu: ---
 menu: Quit NextUp
 LINES
 )
-out=$(timeout 30 "$app/Contents/MacOS/NextUp" --self-check) || fail "self-check exited with $?"
+# A 30 s limit; perl because macOS 27.0 (the CI image) has no `timeout`.
+out=$(perl -e 'alarm shift; exec @ARGV' 30 "$app/Contents/MacOS/NextUp" --self-check) || fail "self-check exited with $?"
 body=$(printf '%s\n' "$out" | sed '$d')
 last=$(printf '%s\n' "$out" | tail -n 1)
 if [ "$body" != "$expected" ]; then

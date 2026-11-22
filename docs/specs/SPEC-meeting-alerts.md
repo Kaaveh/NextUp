@@ -1,6 +1,6 @@
 # Spec: meeting-alerts
 
-Module 3 of 3 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open.
+Module 3 of 4 in the NextUp capability map ([CAPABILITY-MAP.md](CAPABILITY-MAP.md)). It depends on `menubar-app`. Status: built; the manual QA list is open.
 
 ## Objective
 
