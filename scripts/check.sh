@@ -54,7 +54,8 @@ menu: ---
 menu: Quit NextUp
 LINES
 )
-out=$(timeout 30 "$app/Contents/MacOS/NextUp" --self-check) || fail "self-check exited with $?"
+# A 30 s limit; perl because macOS 27.0 (the CI image) has no `timeout`.
+out=$(perl -e 'alarm shift; exec @ARGV' 30 "$app/Contents/MacOS/NextUp" --self-check) || fail "self-check exited with $?"
 body=$(printf '%s\n' "$out" | sed '$d')
 last=$(printf '%s\n' "$out" | tail -n 1)
 if [ "$body" != "$expected" ]; then

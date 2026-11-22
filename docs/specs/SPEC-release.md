@@ -23,7 +23,7 @@ Someone without Xcode or an Apple Developer account installs NextUp from a GitHu
 **Workflow** (`.github/workflows/release.yml`)
 - R9. Trigger: a pushed tag matching `v*`, nothing else.
 - R10. `permissions: contents: write` and the default `GITHUB_TOKEN`, nothing more. No secrets, certificates or signing identities.
-- R11. Runner `xcode-27`: GitHub's public-preview image with Xcode 27.1 on macOS 27, the closest to the development Mac (Swift 6.4, `/usr/bin/timeout`, which `check.sh` needs).
+- R11. Runner `xcode-27`: GitHub's public-preview image with Xcode 27.1 on macOS 27, the closest to the development Mac (Swift 6.4).
 - R12. Steps: `actions/checkout` with `persist-credentials: false`, pinned to a full commit SHA with its tag in a comment; the tag check (R13); `swift test`; `scripts/check.sh`; `scripts/make-dmg.sh <version>`; the release (R14). No other action: the release uses the `gh` CLI that the image ships.
 - R13. The tag minus its leading `v` and any `-suffix` must equal `CFBundleShortVersionString`, or the job fails before building: `v1.2.0` and `v1.2.0-rc1` both need `1.2.0`.
 - R14. `gh release create <tag> --verify-tag --generate-notes --title "NextUp <version>"` with the DMG, the zip and the `.sha256` attached, where `<version>` is the tag minus its `v`. A tag holding `-` adds `--prerelease`.

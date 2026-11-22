@@ -41,7 +41,7 @@ Build order: core-rules → menubar-app → meeting-alerts → release.
 - With ad-hoc signing macOS asks for the permissions again after every rebuild, because the identity changes.
 - `tccutil reset Calendar <bundle id>` works only while an app with that id sits where LaunchServices indexes it: it worked under the home folder and failed under `/private/tmp`.
 - The keychain holds 2 valid Apple Development code-signing identities.
-- `/Applications` is writable without `sudo`. `/usr/bin/timeout` exists.
+- `/Applications` is writable without `sudo`. `/usr/bin/timeout` exists here, but not on GitHub's macOS 27.0.1 image; `/usr/bin/perl` exists on both.
 - `swift build -c release --arch arm64 --arch x86_64` builds a universal binary, `minos 14.0` in both slices, into the same folder as a native build. It warns that x86_64 is deprecated.
 - A process started from a shell can build an `NSStatusItem` and its `NSMenu`, print them and exit, with no prompt. The self-check relies on this.
 - An AppKit agent with one status item and a small menu, built for release, bundled and ad-hoc signed, idles at 17 to 18 MB of physical footprint with no calendar code running. That leaves about 12 MB for everything else.

@@ -127,7 +127,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   3. `swift test`;
   4. `NEXTUP_SIGN_IDENTITY=- scripts/build-app.sh`: always ad-hoc, whatever the environment holds, so no keychain is touched;
   5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists; `lipo -verify_arch` passes for `arm64` and `x86_64` (release R2);
-  6. `timeout 30 build/NextUp.app/Contents/MacOS/NextUp --self-check` exits with 0, its output without the last line equals R36, and the last line matches `^footprint: [0-9]+\.[0-9] MB$`;
+  6. `perl -e 'alarm shift; exec @ARGV' 30 build/NextUp.app/Contents/MacOS/NextUp --self-check` (a 30 s limit; macOS 27.0 has no `timeout`) exits with 0, its output without the last line equals R36, and the last line matches `^footprint: [0-9]+\.[0-9] MB$`;
   7. print the footprint line and `check: OK`.
 - R39. `scripts/install.sh` is for a person, never for automation:
   1. the identity is `$NEXTUP_SIGN_IDENTITY` when set; otherwise the SHA-1 on the first line containing `Apple Development` in the output of `security find-identity -v -p codesigning`; otherwise `-`, with a warning that macOS will ask for the permissions again after every install;
@@ -174,7 +174,7 @@ build/                                 output, ignored by git
 
 ## Tech Stack
 
-Swift 6, AppKit, EventKit, ServiceManagement, on top of `NextUpCore`. Shell scripts for bash 3.2, with `codesign`, `plutil`, `PlistBuddy`, `ditto` and `timeout` from macOS. No dependencies.
+Swift 6, AppKit, EventKit, ServiceManagement, on top of `NextUpCore`. Shell scripts for bash 3.2, with `codesign`, `plutil`, `PlistBuddy`, `ditto` and `perl` from macOS. No dependencies.
 
 ## Commands
 
