@@ -127,7 +127,7 @@ The shell is thin: it reads events, hands them to `NextUpCore`, and draws what c
   2. fail if `Sources` contains `import SwiftUI`, `import Network` or `URLSession`;
   3. `swift test`;
   4. `NEXTUP_SIGN_IDENTITY=- scripts/build-app.sh`: always ad-hoc, whatever the environment holds, so no keychain is touched;
-  5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists; `meet.png` and `AppIcon.icns` (with `CFBundleIconFile`) are in `Contents/Resources`; `lipo -verify_arch` passes for `arm64` and `x86_64` (release R2);
+  5. on `build/NextUp.app`: `plutil -lint` on its `Info.plist`; `codesign --verify --strict`; `LSUIElement` is `true`; `CFBundleIdentifier` is `ir.kaavehdev.nextup`; `NSCalendarsFullAccessUsageDescription` exists; `meet.png`, `Knock.wav` (meeting-alerts R35) and `AppIcon.icns` (with `CFBundleIconFile`) are in `Contents/Resources`; `lipo -verify_arch` passes for `arm64` and `x86_64` (release R2);
   6. `perl -e 'alarm shift; exec @ARGV' 30 build/NextUp.app/Contents/MacOS/NextUp --self-check` (a 30 s limit; macOS 27.0 has no `timeout`) exits with 0, its output without the last line equals R36, and the last line matches `^footprint: [0-9]+\.[0-9] MB$`;
   7. print the footprint line and `check: OK`.
 - R39. `scripts/install.sh` is for a person, never for automation:

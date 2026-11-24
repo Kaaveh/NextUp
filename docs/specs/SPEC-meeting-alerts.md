@@ -67,14 +67,15 @@ One minute before a meeting starts, NextUp opens its own panel at the top right,
 - R31. Look, from the reference screenshot, the same in light and dark mode:
   - a borderless `NSPanel`, about 460 × 72 pt, with `NSAppearance(named: .darkAqua)`, a corner radius of 12 pt, the fill `#2C2C2C` and a 1 pt border `#3B3B3B`;
   - on the left, 16 pt in, two lines: the title (13 pt medium, label colour, one line, cut at the tail); below it the status (R27) in `systemRed`, then ` · ` and the `timeRange` in the secondary label colour, both 12 pt;
-  - on the right, 12 pt in and centred vertically: a 28 pt tall button with the fill `#373737` and a 6 pt corner radius holding the Google Meet logo (16 pt, the image of menubar-app R26) and `Join Google Meet` (13 pt), joined to a 28 × 28 pt `chevron.down` part by a 1 pt divider in the panel's fill `#2C2C2C`. The chevron opens a menu with `Dismiss` and `Copy link`.
+  - on the right, 12 pt in and centred vertically: a 28 pt tall button with the fill `#373737` and a 6 pt corner radius holding the Google Meet logo (16 pt, the image of menubar-app R26) and `Join Google Meet` (13 pt), joined to a 28 × 28 pt `chevron.down` part by a 1 pt divider in the panel's fill `#2C2C2C`. The chevron opens a menu with `Dismiss` and `Copy link`;
+  - a close button as on macOS notifications: `xmark.circle.fill`, 16 pt, borderless, in the secondary label colour, 6 pt in from the panel's top and left edges. It is hidden until the pointer enters the panel and hidden again when it leaves (an `NSTrackingArea` with `.activeAlways`, since NextUp is never the active app).
 - R32. Place: the top right of the screen with the menu bar (`NSScreen.screens.first`), 8 pt below the top of its `visibleFrame` and 8 pt in from its right edge. Another open panel goes 8 pt below the lowest one; when one closes, the ones below move up. The panel sits at the `.statusBar` level, shows on every Space and over full-screen apps (`.canJoinAllSpaces`, `.fullScreenAuxiliary`), stays when NextUp isn't active (`hidesOnDeactivate = false`), and never takes focus from the app being typed in (`.nonactivatingPanel`): a click on its buttons works without activating NextUp.
 - R33. Each refresh passes `now` on: an open panel redraws its status, and closes when `panelStatus` is `nil`. The status is at most a minute stale, which the minute tick (menubar-app R16) keeps true at whole-minute starts.
 - R34. Actions:
   - `Join Google Meet` opens the link with R20's check (`MeetingAlerts.open`) and closes the panel;
-  - `Dismiss` closes it;
+  - `Dismiss`, and the close button of R31, close it;
   - `Copy link` puts the link on the general pasteboard as a string, and the panel stays.
-- R35. The panel plays no sound, needs no permission, and shows with a Focus on. It exists only in normal mode: `MeetingAlerts` owns the timers and panels, the self-check never creates it (R23), and its output doesn't change.
+- R35. Each panel that opens plays `Contents/Resources/Knock.wav` once (`NSSound(named: "Knock")`); a bundle without the file opens it silently. The knock is NextUp's own two-note wooden sound in the style of Slack's, synthesized by `scripts/make-sound.swift` into `Support/Knock.wav`, which is committed, so builds don't run the script; Slack's own file is never used. The panel needs no permission and shows, with its sound, with a Focus on: NextUp can't read the Focus without a permission. It exists only in normal mode: `MeetingAlerts` owns the timers and panels, the self-check never creates it (R23), and its output doesn't change.
 
 ## Interface
 
@@ -108,6 +109,8 @@ Tests/NextUpCoreTests/AlertPlanTests.swift
 Sources/NextUp/MeetingAlerts.swift              the panel timers, the open panels, the link check
 Sources/NextUp/MeetingPanel.swift               the panel window, its layout, its actions and the stacking
 Sources/NextUp/AppDelegate.swift                calls it after refresh
+scripts/make-sound.swift                        synthesizes Support/Knock.wav (R35)
+Support/Knock.wav                               the panel's sound, copied to Contents/Resources
 ```
 
 ## Tech Stack, Commands, Code Style
@@ -143,6 +146,7 @@ Manual QA (the user, on the installed app; stays open after the build):
 - [ ] Moving the test event 10 minutes later gives one panel, at the new time. Deleting it gives none. An event without a link gives none.
 - [ ] At the start time it reads `now`; at the meeting's end it closes by itself.
 - [ ] `Join Google Meet` opens the meeting and closes the panel. `˅` → `Dismiss` closes it. `˅` → `Copy link` copies the link and leaves it open; the browser comes to the front on Join.
+- [ ] The panel opens with the knock. Hovering it shows the × at the top left; the × closes it; moving the pointer away hides the ×.
 - [ ] Two meetings at the same time give two stacked panels; closing the top one moves the other up.
 - [ ] The panel shows over a full-screen app and on another Space, and typing in another app isn't interrupted.
 - [ ] Beside Notion Calendar's panel, the size, colours and text match; note any gap to tune.

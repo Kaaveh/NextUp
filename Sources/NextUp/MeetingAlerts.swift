@@ -12,6 +12,8 @@ final class MeetingAlerts {
     private var timers: [String: Timer] = [:]
     /// The open panels, top to bottom (R32).
     private var panels: [MeetingPanel] = []
+    /// `Contents/Resources/Knock.wav`, played as a panel opens; `nil` (silent) if the bundle lacks it (R35).
+    private static let knock = NSSound(named: "Knock")
 
     /// The next update starts from scratch: a timer may not follow a clock change (R12).
     func forget() {
@@ -58,6 +60,7 @@ final class MeetingAlerts {
         panels.append(panel)
         stackPanels()
         panel.orderFrontRegardless()
+        Self.knock?.play()
     }
 
     /// Top right of the menu bar's screen, 8 pt in from the top and right of its visible frame, 8 pt apart (R32).

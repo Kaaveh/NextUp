@@ -1,13 +1,16 @@
 import AppKit
 import NextUpCore
 
-/// NextUp's own Notion-style panel, its only meeting alert: the title, the status and `Join Google Meet` (meeting-alerts R31–R34).
+/// NextUp's own Notion-style panel, its only meeting alert: the title, the status, `Join Google Meet` and a close button
+/// on hover (meeting-alerts R31–R34).
 /// `MeetingAlerts` opens, stacks and closes it; normal mode only (R35).
 final class MeetingPanel: NSPanel {
     let alert: Alert
     /// Called once when the panel closes, so the ones below move up (R32).
     private let onClose: (MeetingPanel) -> Void
     private let status = NSTextField(labelWithString: "")
+    /// The close button, shown while the pointer is over the panel (R31, R34).
+    private let close = NSButton()
 
     init(_ alert: Alert, now: Date, onClose: @escaping (MeetingPanel) -> Void) {
         self.alert = alert
@@ -25,6 +28,8 @@ final class MeetingPanel: NSPanel {
         isOpaque = false
         hasShadow = true
         contentView = layout()
+        contentView?.addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                                    owner: self))
         update(now: now)
     }
 
@@ -36,6 +41,9 @@ final class MeetingPanel: NSPanel {
         line.addAttribute(.font, value: NSFont.systemFont(ofSize: 12), range: NSRange(location: 0, length: line.length))
         status.attributedStringValue = line
     }
+
+    override func mouseEntered(with event: NSEvent) { close.isHidden = false }
+    override func mouseExited(with event: NSEvent) { close.isHidden = true }
 
     @objc func dismiss() {
         guard isVisible else { return }
@@ -88,7 +96,15 @@ final class MeetingPanel: NSPanel {
         join.setContentHuggingPriority(.required, for: .horizontal)
         group.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        for subview in [text, group] {
+        close.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Dismiss")
+        close.imageScaling = .scaleProportionallyUpOrDown
+        close.isBordered = false
+        close.contentTintColor = .secondaryLabelColor
+        close.target = self
+        close.action = #selector(dismiss)
+        close.isHidden = true
+
+        for subview in [text, group, close] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(subview)
         }
@@ -103,6 +119,10 @@ final class MeetingPanel: NSPanel {
             divider.heightAnchor.constraint(equalTo: group.heightAnchor),
             chevron.widthAnchor.constraint(equalToConstant: 28),
             chevron.heightAnchor.constraint(equalToConstant: 28),
+            close.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
+            close.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
+            close.widthAnchor.constraint(equalToConstant: 16),
+            close.heightAnchor.constraint(equalToConstant: 16),
         ])
         return view
     }

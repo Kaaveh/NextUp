@@ -12,6 +12,7 @@ mkdir -p build/NextUp.app/Contents/MacOS build/NextUp.app/Contents/Resources
 cp "$bin/NextUp" build/NextUp.app/Contents/MacOS/NextUp
 cp Support/Info.plist build/NextUp.app/Contents/Info.plist
 cp Support/meet.png build/NextUp.app/Contents/Resources/meet.png
+cp Support/Knock.wav build/NextUp.app/Contents/Resources/Knock.wav
 cp Support/AppIcon.icns build/NextUp.app/Contents/Resources/AppIcon.icns
 
 codesign --force --sign "${NEXTUP_SIGN_IDENTITY:--}" build/NextUp.app
