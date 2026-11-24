@@ -32,6 +32,7 @@ codesign --verify --strict "$app" || fail "codesign --verify --strict failed"
 [ "$(key CFBundleIdentifier)" = ir.kaavehdev.nextup ] || fail "CFBundleIdentifier isn't ir.kaavehdev.nextup"
 key NSCalendarsFullAccessUsageDescription >/dev/null || fail "NSCalendarsFullAccessUsageDescription is missing"
 [ -f "$app/Contents/Resources/meet.png" ] || fail "Contents/Resources/meet.png is missing"
+[ -f "$app/Contents/Resources/Knock.wav" ] || fail "Contents/Resources/Knock.wav is missing"
 [ -f "$app/Contents/Resources/AppIcon.icns" ] && [ "$(key CFBundleIconFile)" = AppIcon ] || fail "the app icon is missing"
 for arch in arm64 x86_64; do  # one per call: this lipo reads a second arch as a file
     lipo "$app/Contents/MacOS/NextUp" -verify_arch "$arch" || fail "the binary has no $arch slice"

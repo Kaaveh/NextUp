@@ -15,6 +15,7 @@ scripts/check.sh                                        # the gate: rules, bundl
 scripts/build-app.sh                                    # build/NextUp.app (universal), signed with $NEXTUP_SIGN_IDENTITY or ad-hoc
 scripts/make-dmg.sh [version]                           # build/NextUp-<version>.dmg, .zip, .sha256, always ad-hoc
 swift scripts/make-icon.swift                           # redraw Support/AppIcon.icns (committed; builds don't run it)
+swift scripts/make-sound.swift                          # resynthesize Support/Knock.wav (committed; builds don't run it)
 build/NextUp.app/Contents/MacOS/NextUp --self-check     # sample data, no prompts; needs the logged-in desktop session
 scripts/install.sh                                      # a person only: keychain identity, /Applications/NextUp.app, open
 footprint -p "$(pgrep -x NextUp)"                       # idle memory of the installed app
