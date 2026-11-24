@@ -10,7 +10,7 @@ final class MeetingPanel: NSPanel {
     private let onClose: (MeetingPanel) -> Void
     private let status = NSTextField(labelWithString: "")
     /// The close button, shown while the pointer is over the panel (R31, R34).
-    private let close = NSButton()
+    private let closeButton = NSButton()
 
     init(_ alert: Alert, now: Date, onClose: @escaping (MeetingPanel) -> Void) {
         self.alert = alert
@@ -42,8 +42,14 @@ final class MeetingPanel: NSPanel {
         status.attributedStringValue = line
     }
 
-    override func mouseEntered(with event: NSEvent) { close.isHidden = false }
-    override func mouseExited(with event: NSEvent) { close.isHidden = true }
+    override func mouseEntered(with event: NSEvent) { closeButton.isHidden = false }
+    override func mouseExited(with event: NSEvent) { closeButton.isHidden = true }
+
+    /// Shows the close button if the pointer is over the panel: a panel that opens or moves under a still pointer
+    /// gets no entered or exited event.
+    func syncCloseButton() {
+        closeButton.isHidden = !frame.contains(NSEvent.mouseLocation)
+    }
 
     @objc func dismiss() {
         guard isVisible else { return }
@@ -96,15 +102,15 @@ final class MeetingPanel: NSPanel {
         join.setContentHuggingPriority(.required, for: .horizontal)
         group.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        close.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Dismiss")
-        close.imageScaling = .scaleProportionallyUpOrDown
-        close.isBordered = false
-        close.contentTintColor = .secondaryLabelColor
-        close.target = self
-        close.action = #selector(dismiss)
-        close.isHidden = true
+        closeButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Dismiss")
+        closeButton.imageScaling = .scaleProportionallyUpOrDown
+        closeButton.isBordered = false
+        closeButton.contentTintColor = .secondaryLabelColor
+        closeButton.target = self
+        closeButton.action = #selector(dismiss)
+        closeButton.isHidden = true
 
-        for subview in [text, group, close] {
+        for subview in [text, group, closeButton] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(subview)
         }
@@ -119,10 +125,10 @@ final class MeetingPanel: NSPanel {
             divider.heightAnchor.constraint(equalTo: group.heightAnchor),
             chevron.widthAnchor.constraint(equalToConstant: 28),
             chevron.heightAnchor.constraint(equalToConstant: 28),
-            close.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
-            close.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
-            close.widthAnchor.constraint(equalToConstant: 16),
-            close.heightAnchor.constraint(equalToConstant: 16),
+            closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 4),
+            closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 4),
+            closeButton.widthAnchor.constraint(equalToConstant: 14),
+            closeButton.heightAnchor.constraint(equalToConstant: 14),
         ])
         return view
     }

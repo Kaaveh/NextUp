@@ -1,28 +1,45 @@
-// Synthesizes Support/Knock.wav, the meeting panel's sound (meeting-alerts R35): NextUp's own two-note
-// wooden knock in the style of Slack's. Foundation only; the WAV is written by hand. Run from the repo root:
+// Synthesizes Support/Knock.wav, the meeting panel's sound (meeting-alerts R35): NextUp's own knock in the style
+// of Slack's Knock Brush, a soft high brush and then three short knocks. Foundation only; the WAV is written by
+// hand. Run from the repo root:
 //     swift scripts/make-sound.swift && afplay Support/Knock.wav
 import Foundation
 
 // Tuning knobs.
 let rate = 44_100.0
-let notes: [(start: Double, pitch: Double)] = [(0, 660), (0.09, 990)]  // seconds, Hz: a fifth up
-let partials: [(ratio: Double, weight: Double)] = [(1, 1), (4, 0.25), (10, 0.06)]  // marimba-like bar
-let attack = 0.002     // s
-let decay = 0.07       // s, time constant of the exponential fade
-let length = 0.45      // s
-let gain = 0.5         // peak, of 1
+let length = 0.5                                  // s
+let gain = 0.385                                  // peak, of 1: -8.3 dBFS
+let brushLength = 0.075                           // s, the swish before the knocks
+let brushLevel = 0.06                             // of a knock's peak
+let knocks = [0.233, 0.367, 0.467]                // s, onsets
+let pitch = 1210.0                                // Hz
+let overtone = (ratio: 2.7, weight: 0.07)
+let attack = 0.005                                // s
+let decay = 0.003                                 // s, time constant of each knock's fade
 
 var samples = [Double](repeating: 0, count: Int(length * rate))
-for note in notes {
-    for i in Int(note.start * rate)..<samples.count {
-        let t = Double(i) / rate - note.start
+
+// The brush: white noise, band-passed around 11 kHz, in a 12 ms fade-in / 15 ms fade-out.
+var seed: UInt32 = 1  // a fixed LCG, so every run writes the same file
+func noise() -> Double { seed = seed &* 1_664_525 &+ 1_013_904_223; return Double(seed) / Double(UInt32.max) * 2 - 1 }
+var (n1, n2) = (0.0, 0.0)
+for i in 0..<min(Int(brushLength * rate), samples.count) {
+    let t = Double(i) / rate
+    let n0 = noise()
+    let high = n0 - n2  // a band-pass that peaks at a quarter of the rate, 11 kHz
+    (n2, n1) = (n1, n0)
+    samples[i] += brushLevel * min(t / 0.012, 1, (brushLength - t) / 0.015) * high / 2
+}
+
+// The knocks: a sine with a weak inharmonic overtone, a fast attack and a fast exponential fade.
+for onset in knocks {
+    for i in min(Int(onset * rate), samples.count)..<samples.count {
+        let t = Double(i) / rate - onset
         let envelope = min(t / attack, 1) * exp(-t / decay)
-        for p in partials {
-            // Higher partials fade faster, as on a struck bar.
-            samples[i] += p.weight * envelope * exp(-t * p.ratio * 8) * sin(2 * .pi * note.pitch * p.ratio * t)
-        }
+        if t > attack, envelope < 1e-5 { break }
+        samples[i] += envelope * (sin(2 * .pi * pitch * t) + overtone.weight * sin(2 * .pi * pitch * overtone.ratio * t))
     }
 }
+
 let peak = samples.map(abs).max() ?? 1
 let pcm = samples.map { Int16(($0 / peak * gain * Double(Int16.max)).rounded()) }
 
